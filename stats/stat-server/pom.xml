@@ -68,7 +68,6 @@
     </dependencies>
 
     <build>
-        <finalName>stat-server</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
