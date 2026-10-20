@@ -1,0 +1,4026 @@
+{
+  "info": {
+    "_postman_id": "15f5e902-b166-4ac1-82d4-a59baba547fd",
+    "name": "Test Explore With Me - feature EventComment",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "56593144",
+    "_collection_link": "https://go.postman.co/collection/56593144-15f5e902-b166-4ac1-82d4-a59baba547fd?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Модерация комментариев",
+          "item": [
+            {
+              "name": "Модерация отказ(позитивный)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Статус 200 Ok\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поля\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.all.keys('id', 'content', 'author', 'status', 'created', 'event');",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поле статус со значением APPROVED\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    const status = jsonData.status;",
+                      "    pm.expect(status).to.equal(\"REJECTED\");",
+                      "});"
+                    ]
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: randomString(6) + \" \" + randomString(10),",
+                      "            email: randomString(8) + \"@mail.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: randomString(7)",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие \" + randomInt(1,100)",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ",
+                      "         const comment = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "     ",
+                      "        const createdComment = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "        pm.collectionVariables.set('commentId', createdComment.id);",
+                      "",
+                      "    } catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);",
+                      "",
+                      "function randomString(length) {",
+                      "    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';",
+                      "    let result = '';",
+                      "    for (let i = 0; i < length; i++) {",
+                      "        result += chars.charAt(Math.floor(Math.random() * chars.length));",
+                      "    }",
+                      "    return result;",
+                      "};",
+                      "",
+                      "function randomInt(min, max) {",
+                      "    return Math.floor(Math.random() * (max - min + 1)) + min;",
+                      "};"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/comments/{{commentId}}/reject",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "comments",
+                    "{{commentId}}",
+                    "reject"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Модерация подтверждение(позитивный)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Статус 200 Ok\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поля\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.all.keys('id', 'content', 'author', 'status', 'created', 'event');",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поле статус со значением APPROVED\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    const status = jsonData.status;",
+                      "    pm.expect(status).to.equal(\"APPROVED\");",
+                      "});"
+                    ]
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: randomString(6) + \" \" + randomString(10),",
+                      "            email: randomString(8) + \"@mail.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: randomString(7)",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие \" + randomInt(1,100)",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ",
+                      "         const comment = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "     ",
+                      "        const createdComment = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "        pm.collectionVariables.set('commentId', createdComment.id);",
+                      "",
+                      "    } catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);",
+                      "",
+                      "function randomString(length) {",
+                      "    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';",
+                      "    let result = '';",
+                      "    for (let i = 0; i < length; i++) {",
+                      "        result += chars.charAt(Math.floor(Math.random() * chars.length));",
+                      "    }",
+                      "    return result;",
+                      "};",
+                      "",
+                      "function randomInt(min, max) {",
+                      "    return Math.floor(Math.random() * (max - min + 1)) + min;",
+                      "};"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/comments/{{commentId}}/approve",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "comments",
+                    "{{commentId}}",
+                    "approve"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Модерация подтверждение(негативный - повторный аппрув)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Статус 409 Conflict\", function () {",
+                      "    pm.response.to.have.status(409);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поля\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.all.keys('error', 'message', 'status', 'timestamp', 'path');",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: randomString(6) + \" \" + randomString(10),",
+                      "            email: randomString(8) + \"@mail.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: randomString(7)",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие \" + randomInt(1,100)",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ",
+                      "         const comment = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "     ",
+                      "        const createdComment = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "        pm.collectionVariables.set('commentId', createdComment.id);",
+                      "",
+                      "        api.approveComment(createdComment.id);",
+                      "",
+                      "    } catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);",
+                      "",
+                      "function randomString(length) {",
+                      "    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';",
+                      "    let result = '';",
+                      "    for (let i = 0; i < length; i++) {",
+                      "        result += chars.charAt(Math.floor(Math.random() * chars.length));",
+                      "    }",
+                      "    return result;",
+                      "};",
+                      "",
+                      "function randomInt(min, max) {",
+                      "    return Math.floor(Math.random() * (max - min + 1)) + min;",
+                      "};"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/comments/{{commentId}}/approve",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "comments",
+                    "{{commentId}}",
+                    "approve"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Модерация отказ(негативный - повторный реджект)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Статус 409 Conflict\", function () {",
+                      "    pm.response.to.have.status(409);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поля\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.all.keys('error', 'message', 'status', 'timestamp', 'path');",
+                      "});",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: randomString(6) + \" \" + randomString(10),",
+                      "            email: randomString(8) + \"@mail.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: randomString(7)",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие \" + randomInt(1,100)",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ",
+                      "         const comment = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "     ",
+                      "        const createdComment = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "        pm.collectionVariables.set('commentId', createdComment.id);",
+                      "",
+                      "        api.rejectComment(createdComment.id);",
+                      "",
+                      "    } catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);",
+                      "",
+                      "function randomString(length) {",
+                      "    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';",
+                      "    let result = '';",
+                      "    for (let i = 0; i < length; i++) {",
+                      "        result += chars.charAt(Math.floor(Math.random() * chars.length));",
+                      "    }",
+                      "    return result;",
+                      "};",
+                      "",
+                      "function randomInt(min, max) {",
+                      "    return Math.floor(Math.random() * (max - min + 1)) + min;",
+                      "};"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/comments/{{commentId}}/reject",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "comments",
+                    "{{commentId}}",
+                    "reject"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Получение комментариев",
+          "item": [
+            {
+              "name": "Получение всех(негативный - с параметрами - отрицательные параметры)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Ответ должен содержать код статуса 400 Bad Request\", function () {",
+                      "    pm.response.to.be.badRequest;    ",
+                      "    pm.response.to.be.withBody;",
+                      "     pm.response.to.be.json;",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: randomString(6) + \" \" + randomString(10),",
+                      "            email: randomString(8) + \"@mail.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: randomString(7)",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие \" + randomInt(1,100)",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ",
+                      "         const comment = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "     ",
+                      "        const createdComment = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "",
+                      "    } catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);",
+                      "",
+                      "function randomString(length) {",
+                      "    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';",
+                      "    let result = '';",
+                      "    for (let i = 0; i < length; i++) {",
+                      "        result += chars.charAt(Math.floor(Math.random() * chars.length));",
+                      "    }",
+                      "    return result;",
+                      "};",
+                      "",
+                      "function randomInt(min, max) {",
+                      "    return Math.floor(Math.random() * (max - min + 1)) + min;",
+                      "};"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/comments?from=-1&size=-1",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "comments"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "-1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "-1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Получение всех(позитивный - без параметров)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {",
+                      "    pm.response.to.be.ok;    ",
+                      "    pm.response.to.be.withBody;",
+                      "",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.be.an('array');",
+                      "    pm.expect(jsonData.length).to.be.greaterThan(0);",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: randomString(6) + \" \" + randomString(10),",
+                      "            email: randomString(8) + \"@mail.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: randomString(7)",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие \" + randomInt(1,100)",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ",
+                      "         const comment = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "   ",
+                      "        const createdComment = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "        api.approveComment(createdComment.id)",
+                      "",
+                      "       const createdComment2 = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "       api.rejectComment(createdComment2.id)",
+                      "",
+                      "       await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "",
+                      "    } catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);",
+                      "",
+                      "function randomString(length) {",
+                      "    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';",
+                      "    let result = '';",
+                      "    for (let i = 0; i < length; i++) {",
+                      "        result += chars.charAt(Math.floor(Math.random() * chars.length));",
+                      "    }",
+                      "    return result;",
+                      "};",
+                      "",
+                      "function randomInt(min, max) {",
+                      "    return Math.floor(Math.random() * (max - min + 1)) + min;",
+                      "};"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/comments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "comments"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Получение всех(позитивный - с параметрами)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {",
+                      "    pm.response.to.be.ok;    ",
+                      "    pm.response.to.be.withBody;",
+                      "",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.be.an('array');",
+                      "    pm.expect(jsonData.length).to.be.greaterThan(0);",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: randomString(6) + \" \" + randomString(10),",
+                      "            email: randomString(8) + \"@mail.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: randomString(7)",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие \" + randomInt(1,100)",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ",
+                      "         const comment = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "   ",
+                      "        const createdComment = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "        api.approveComment(createdComment.id)",
+                      "",
+                      "       const createdComment2 = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "       api.rejectComment(createdComment2.id)",
+                      "",
+                      "       await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "",
+                      "    } catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);",
+                      "",
+                      "function randomString(length) {",
+                      "    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';",
+                      "    let result = '';",
+                      "    for (let i = 0; i < length; i++) {",
+                      "        result += chars.charAt(Math.floor(Math.random() * chars.length));",
+                      "    }",
+                      "    return result;",
+                      "};",
+                      "",
+                      "function randomInt(min, max) {",
+                      "    return Math.floor(Math.random() * (max - min + 1)) + min;",
+                      "};"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/comments?from=1&size=1&state=APPROVED",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "comments"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "1"
+                    },
+                    {
+                      "key": "state",
+                      "value": "APPROVED",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Получение всех(негативный - с параметрами - некорректный статус)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Ответ должен содержать код статуса 400 Bad Request\", function () {",
+                      "    pm.response.to.be.badRequest;    ",
+                      "    pm.response.to.be.withBody;",
+                      "     pm.response.to.be.json;",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: randomString(6) + \" \" + randomString(10),",
+                      "            email: randomString(8) + \"@mail.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: randomString(7)",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие \" + randomInt(1,100)",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ",
+                      "         const comment = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "     ",
+                      "        const createdComment = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "",
+                      "    } catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);",
+                      "",
+                      "function randomString(length) {",
+                      "    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';",
+                      "    let result = '';",
+                      "    for (let i = 0; i < length; i++) {",
+                      "        result += chars.charAt(Math.floor(Math.random() * chars.length));",
+                      "    }",
+                      "    return result;",
+                      "};",
+                      "",
+                      "function randomInt(min, max) {",
+                      "    return Math.floor(Math.random() * (max - min + 1)) + min;",
+                      "};"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/comments?from=1&size=1&state=RED",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "comments"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "1"
+                    },
+                    {
+                      "key": "state",
+                      "value": "RED",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Получение комментария(позитивный)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Статус 200 Ok\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: randomString(6) + \" \" + randomString(10),",
+                      "            email: randomString(8) + \"@mail.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: randomString(7)",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие \" + randomInt(1,100)",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ",
+                      "         const comment = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "   ",
+                      "        const createdComment = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "        pm.collectionVariables.set('commentId', createdComment.id);",
+                      "       ",
+                      "",
+                      "    } catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);",
+                      "",
+                      "function randomString(length) {",
+                      "    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';",
+                      "    let result = '';",
+                      "    for (let i = 0; i < length; i++) {",
+                      "        result += chars.charAt(Math.floor(Math.random() * chars.length));",
+                      "    }",
+                      "    return result;",
+                      "};",
+                      "",
+                      "function randomInt(min, max) {",
+                      "    return Math.floor(Math.random() * (max - min + 1)) + min;",
+                      "};"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/comments/{{commentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "comments",
+                    "{{commentId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Получение комментария(негативный)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Статус 404 Not Found\", function () {",
+                      "    pm.response.to.have.status(404);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поля\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.all.keys('error', 'message', 'status', 'timestamp', 'path');",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: randomString(6) + \" \" + randomString(10),",
+                      "            email: randomString(8) + \"@mail.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: randomString(7)",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие \" + randomInt(1,100)",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ",
+                      "         const comment = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "   ",
+                      "        const createdComment = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "        pm.collectionVariables.set('commentId', 99999999);",
+                      "       ",
+                      "",
+                      "    } catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);",
+                      "",
+                      "function randomString(length) {",
+                      "    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';",
+                      "    let result = '';",
+                      "    for (let i = 0; i < length; i++) {",
+                      "        result += chars.charAt(Math.floor(Math.random() * chars.length));",
+                      "    }",
+                      "    return result;",
+                      "};",
+                      "",
+                      "function randomInt(min, max) {",
+                      "    return Math.floor(Math.random() * (max - min + 1)) + min;",
+                      "};"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/comments/{{commentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "comments",
+                    "{{commentId}}"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Private",
+      "item": [
+        {
+          "name": "Получение комментариев",
+          "item": [
+            {
+              "name": "Получение комментариев события для конкретного пользователя(позитивный)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {",
+                      "    pm.response.to.be.ok;    ",
+                      "    pm.response.to.be.withBody;",
+                      "",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.be.an('array');",
+                      "    pm.expect(jsonData.length).to.be.greaterThan(0);",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: randomString(6) + \" \" + randomString(10),",
+                      "            email: randomString(8) + \"@mail.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: randomString(7)",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие \" + randomInt(1,100)",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ",
+                      "         const comment = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "   ",
+                      "        const createdComment = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "        pm.collectionVariables.set('commentId', createdComment.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ 2",
+                      "         const comment2 = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "   ",
+                      "        const createdComment2 = await api.addComment(publishedEvent.id,createdUser.id, comment2);",
+                      "        api.approveComment(createdComment2.id);",
+                      "        pm.collectionVariables.set('commentId', createdComment2.id);",
+                      "",
+                      "",
+                      "    }   catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);",
+                      "",
+                      "function randomString(length) {",
+                      "    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';",
+                      "    let result = '';",
+                      "    for (let i = 0; i < length; i++) {",
+                      "        result += chars.charAt(Math.floor(Math.random() * chars.length));",
+                      "    }",
+                      "    return result;",
+                      "};",
+                      "",
+                      "function randomInt(min, max) {",
+                      "    return Math.floor(Math.random() * (max - min + 1)) + min;",
+                      "};"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "X-Explore-With-Me-User-Id",
+                    "value": "{{userId}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Получение комментариев события для конкретного пользователя(негативный - eventId Not Found)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Статус 404 Not Found\", function () {",
+                      "    pm.response.to.have.status(404);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поля\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.all.keys('error', 'message', 'status', 'timestamp', 'path');",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: randomString(6) + \" \" + randomString(10),",
+                      "            email: randomString(8) + \"@mail.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: randomString(7)",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие \" + randomInt(1,100)",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ",
+                      "         const comment = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "   ",
+                      "        const createdComment = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "        pm.collectionVariables.set('commentId', createdComment.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ 2",
+                      "         const comment2 = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "   ",
+                      "        const createdComment2 = await api.addComment(publishedEvent.id,createdUser.id, comment2);",
+                      "        pm.collectionVariables.set('commentId', createdComment2.id);",
+                      "",
+                      "        pm.collectionVariables.set('eventId', 99999999);",
+                      "",
+                      "",
+                      "    }   catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);",
+                      "",
+                      "function randomString(length) {",
+                      "    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';",
+                      "    let result = '';",
+                      "    for (let i = 0; i < length; i++) {",
+                      "        result += chars.charAt(Math.floor(Math.random() * chars.length));",
+                      "    }",
+                      "    return result;",
+                      "};",
+                      "",
+                      "function randomInt(min, max) {",
+                      "    return Math.floor(Math.random() * (max - min + 1)) + min;",
+                      "};"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "X-Explore-With-Me-User-Id",
+                    "value": "{{userId}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Получение комментариев события для конкретного пользователя(негативный - userId Not Found)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Статус 404 Not Found\", function () {",
+                      "    pm.response.to.have.status(404);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поля\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.all.keys('error', 'message', 'status', 'timestamp', 'path');",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: randomString(6) + \" \" + randomString(10),",
+                      "            email: randomString(8) + \"@mail.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: randomString(7)",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие \" + randomInt(1,100)",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ",
+                      "         const comment = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "   ",
+                      "        const createdComment = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "        pm.collectionVariables.set('commentId', createdComment.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ 2",
+                      "         const comment2 = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "   ",
+                      "        const createdComment2 = await api.addComment(publishedEvent.id,createdUser.id, comment2);",
+                      "        pm.collectionVariables.set('commentId', createdComment2.id);",
+                      "",
+                      "        pm.collectionVariables.set('userId', 99999999);",
+                      "",
+                      "",
+                      "    }   catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);",
+                      "",
+                      "function randomString(length) {",
+                      "    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';",
+                      "    let result = '';",
+                      "    for (let i = 0; i < length; i++) {",
+                      "        result += chars.charAt(Math.floor(Math.random() * chars.length));",
+                      "    }",
+                      "    return result;",
+                      "};",
+                      "",
+                      "function randomInt(min, max) {",
+                      "    return Math.floor(Math.random() * (max - min + 1)) + min;",
+                      "};"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "X-Explore-With-Me-User-Id",
+                    "value": "{{userId}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Получение всех комментариев события(позитивный - без параметров)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {",
+                      "    pm.response.to.be.ok;    ",
+                      "    pm.response.to.be.withBody;",
+                      "",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.be.an('array');",
+                      "    pm.expect(jsonData.length).to.be.greaterThan(0);",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: randomString(6) + \" \" + randomString(10),",
+                      "            email: randomString(8) + \"@mail.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: randomString(7)",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие \" + randomInt(1,100)",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ",
+                      "         const comment = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "   ",
+                      "        const createdComment = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "        api.approveComment(createdComment.id)",
+                      "",
+                      "       const createdComment2 = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "       api.approveComment(createdComment2.id)",
+                      "",
+                      "       await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "",
+                      "    } catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);",
+                      "",
+                      "function randomString(length) {",
+                      "    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';",
+                      "    let result = '';",
+                      "    for (let i = 0; i < length; i++) {",
+                      "        result += chars.charAt(Math.floor(Math.random() * chars.length));",
+                      "    }",
+                      "    return result;",
+                      "};",
+                      "",
+                      "function randomInt(min, max) {",
+                      "    return Math.floor(Math.random() * (max - min + 1)) + min;",
+                      "};"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments/approved",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments",
+                    "approved"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Получение всех комментариев события(позитивный - с параметрами)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {",
+                      "    pm.response.to.be.ok;    ",
+                      "    pm.response.to.be.withBody;",
+                      "",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.be.an('array');",
+                      "    pm.expect(jsonData.length).to.be.greaterThan(0);",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: randomString(6) + \" \" + randomString(10),",
+                      "            email: randomString(8) + \"@mail.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: randomString(7)",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие \" + randomInt(1,100)",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ",
+                      "         const comment = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "   ",
+                      "        const createdComment = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "        api.approveComment(createdComment.id)",
+                      "",
+                      "       const createdComment2 = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "       api.approveComment(createdComment2.id)",
+                      "",
+                      "       await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "",
+                      "    } catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);",
+                      "",
+                      "function randomString(length) {",
+                      "    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';",
+                      "    let result = '';",
+                      "    for (let i = 0; i < length; i++) {",
+                      "        result += chars.charAt(Math.floor(Math.random() * chars.length));",
+                      "    }",
+                      "    return result;",
+                      "};",
+                      "",
+                      "function randomInt(min, max) {",
+                      "    return Math.floor(Math.random() * (max - min + 1)) + min;",
+                      "};"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments/approved?from=1&size=2",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments",
+                    "approved"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "1",
+                      "type": "text"
+                    },
+                    {
+                      "key": "size",
+                      "value": "2",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Получение всех комментариев события(негативный - с параметрами - eventId Not Found)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Статус 404 Not Found\", function () {",
+                      "    pm.response.to.have.status(404);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поля\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.all.keys('error', 'message', 'status', 'timestamp', 'path');",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: randomString(6) + \" \" + randomString(10),",
+                      "            email: randomString(8) + \"@mail.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: randomString(7)",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие \" + randomInt(1,100)",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ",
+                      "         const comment = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "   ",
+                      "        const createdComment = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "        api.approveComment(createdComment.id)",
+                      "",
+                      "       const createdComment2 = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "       api.approveComment(createdComment2.id)",
+                      "",
+                      "       await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "",
+                      "       pm.collectionVariables.set('eventId', 999999);",
+                      "",
+                      "    } catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);",
+                      "",
+                      "function randomString(length) {",
+                      "    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';",
+                      "    let result = '';",
+                      "    for (let i = 0; i < length; i++) {",
+                      "        result += chars.charAt(Math.floor(Math.random() * chars.length));",
+                      "    }",
+                      "    return result;",
+                      "};",
+                      "",
+                      "function randomInt(min, max) {",
+                      "    return Math.floor(Math.random() * (max - min + 1)) + min;",
+                      "};"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments/approved?from=1&size=2",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments",
+                    "approved"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "2"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Получение всех комментариев события(негативный - с отрицательными параметрами)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Статус 400 Bad Request\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поля\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.all.keys('error', 'message', 'status', 'timestamp', 'path');",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: randomString(6) + \" \" + randomString(10),",
+                      "            email: randomString(8) + \"@mail.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: randomString(7)",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие \" + randomInt(1,100)",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "        // ДОБАВЛЯЕМ КОММЕНТАРИЙ",
+                      "         const comment = {",
+                      "            content: randomString(20)",
+                      "        };",
+                      "   ",
+                      "        const createdComment = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "        api.approveComment(createdComment.id)",
+                      "",
+                      "       const createdComment2 = await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "       api.approveComment(createdComment2.id)",
+                      "",
+                      "       await api.addComment(publishedEvent.id,createdUser.id, comment);",
+                      "",
+                      "",
+                      "    } catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);",
+                      "",
+                      "function randomString(length) {",
+                      "    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';",
+                      "    let result = '';",
+                      "    for (let i = 0; i < length; i++) {",
+                      "        result += chars.charAt(Math.floor(Math.random() * chars.length));",
+                      "    }",
+                      "    return result;",
+                      "};",
+                      "",
+                      "function randomInt(min, max) {",
+                      "    return Math.floor(Math.random() * (max - min + 1)) + min;",
+                      "};"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments/approved?from=-1&size=-1",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments",
+                    "approved"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "-1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "-1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Редактирование комментария",
+          "item": [
+            {
+              "name": "Редактирование(негативный - commentId Not Found)",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        const user = { name: randomString(6) + \" \" + randomString(10), email: randomString(8) + \"@mail.com\" };",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "        const category = { name: randomString(7) };",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "        const event = { annotation: \"Тестовое событие для комментариев\", category: createdCategory.id, description: \"Описание тестового события\", eventDate: \"2026-12-31 15:10:05\", location: { lat: 55.7558, lon: 37.6173 }, paid: false, participantLimit: 10, requestModeration: true, title: \"Мое тестовое событие \" + randomInt(1,100) };",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "        pm.collectionVariables.set('commentId', 9999999999);",
+                      "        pm.variables.set(\"updateComment\", \"update - \" + randomString(20));",
+                      "    } catch (err) { console.error('❌ Ошибка:', err); }",
+                      "};",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => { try { await main(); } catch (e) { console.error(e); } finally { clearInterval(interval); } }, 100);",
+                      "function randomString(length) { const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'; let result = ''; for (let i = 0; i < length; i++) { result += chars.charAt(Math.floor(Math.random() * chars.length)); } return result; };",
+                      "function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; };"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Статус 404 Not Found\", function () {",
+                      "    pm.response.to.have.status(404);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поля\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.all.keys('error', 'message', 'status', 'timestamp', 'path');",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "X-Explore-With-Me-User-Id",
+                    "value": "{{userId}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"content\":\"{{updateComment}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments/{{commentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments",
+                    "{{commentId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Редактирование(негативный - content length = 5001)",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "    try {",
+                      "        const user = { name: randomString(6) + \" \" + randomString(10), email: randomString(8) + \"@mail.com\" };",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "        const category = { name: randomString(7) };",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "        const event = { annotation: \"Тестовое событие для комментариев\", category: createdCategory.id, description: \"Описание тестового события\", eventDate: \"2026-12-31 15:10:05\", location: { lat: 55.7558, lon: 37.6173 }, paid: false, participantLimit: 10, requestModeration: true, title: \"Мое тестовое событие \" + randomInt(1,100) };",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "        const comment = { content: randomString(20) };",
+                      "        const createdComment = await api.addComment(publishedEvent.id, createdUser.id, comment);",
+                      "        pm.collectionVariables.set('commentId', createdComment.id);",
+                      "        pm.variables.set(\"updateComment\", \"update - \" + randomString(4992));",
+                      "    } catch (err) { console.error('❌ Ошибка:', err); }",
+                      "};",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => { try { await main(); } catch (e) { console.error(e); } finally { clearInterval(interval); } }, 100);",
+                      "function randomString(length) { const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'; let result = ''; for (let i = 0; i < length; i++) { result += chars.charAt(Math.floor(Math.random() * chars.length)); } return result; };",
+                      "function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; };"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Статус 400 Bad Request\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поля\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.all.keys('error', 'message', 'status', 'timestamp', 'path');",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "X-Explore-With-Me-User-Id",
+                    "value": "{{userId}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"content\":\"{{updateComment}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments/{{commentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments",
+                    "{{commentId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Редактирование(негативный - content length = 9)",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "    try {",
+                      "        const user = { name: randomString(6) + \" \" + randomString(10), email: randomString(8) + \"@mail.com\" };",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "        const category = { name: randomString(7) };",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "        const event = { annotation: \"Тестовое событие для комментариев\", category: createdCategory.id, description: \"Описание тестового события\", eventDate: \"2026-12-31 15:10:05\", location: { lat: 55.7558, lon: 37.6173 }, paid: false, participantLimit: 10, requestModeration: true, title: \"Мое тестовое событие \" + randomInt(1,100) };",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "        const comment = { content: randomString(20) };",
+                      "        const createdComment = await api.addComment(publishedEvent.id, createdUser.id, comment);",
+                      "        pm.collectionVariables.set('commentId', createdComment.id);",
+                      "        pm.variables.set(\"updateComment\", \"update - \");",
+                      "    } catch (err) { console.error('❌ Ошибка:', err); }",
+                      "};",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => { try { await main(); } catch (e) { console.error(e); } finally { clearInterval(interval); } }, 100);",
+                      "function randomString(length) { const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'; let result = ''; for (let i = 0; i < length; i++) { result += chars.charAt(Math.floor(Math.random() * chars.length)); } return result; };",
+                      "function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; };"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Статус 400 Bad Request\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поля\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.all.keys('error', 'message', 'status', 'timestamp', 'path');",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "X-Explore-With-Me-User-Id",
+                    "value": "{{userId}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"content\":\"{{updateComment}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments/{{commentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments",
+                    "{{commentId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Редактирование(негативный - eventId Not Found)",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "    try {",
+                      "        const user = { name: randomString(6) + \" \" + randomString(10), email: randomString(8) + \"@mail.com\" };",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "        const category = { name: randomString(7) };",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "        const event = { annotation: \"Тестовое событие для комментариев\", category: createdCategory.id, description: \"Описание тестового события\", eventDate: \"2026-12-31 15:10:05\", location: { lat: 55.7558, lon: 37.6173 }, paid: false, participantLimit: 10, requestModeration: true, title: \"Мое тестовое событие \" + randomInt(1,100) };",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "        const comment = { content: randomString(20) };",
+                      "        const createdComment = await api.addComment(publishedEvent.id, createdUser.id, comment);",
+                      "        pm.collectionVariables.set('commentId', createdComment.id);",
+                      "        pm.variables.set(\"updateComment\", \"update - \" + randomString(20));",
+                      "        pm.collectionVariables.set('eventId', 999999999);",
+                      "    } catch (err) { console.error('❌ Ошибка:', err); }",
+                      "};",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => { try { await main(); } catch (e) { console.error(e); } finally { clearInterval(interval); } }, 100);",
+                      "function randomString(length) { const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'; let result = ''; for (let i = 0; i < length; i++) { result += chars.charAt(Math.floor(Math.random() * chars.length)); } return result; };",
+                      "function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; };"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Статус 404 Not Found\", function () {",
+                      "    pm.response.to.have.status(404);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поля\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.all.keys('error', 'message', 'status', 'timestamp', 'path');",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "X-Explore-With-Me-User-Id",
+                    "value": "{{userId}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"content\":\"{{updateComment}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments/{{commentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments",
+                    "{{commentId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Редактирование(негативный - forbidden)",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "    try {",
+                      "        const user = { name: randomString(6) + \" \" + randomString(10), email: randomString(8) + \"@mail.com\" };",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "        const category = { name: randomString(7) };",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "        const event = { annotation: \"Тестовое событие для комментариев\", category: createdCategory.id, description: \"Описание тестового события\", eventDate: \"2026-12-31 15:10:05\", location: { lat: 55.7558, lon: 37.6173 }, paid: false, participantLimit: 10, requestModeration: true, title: \"Мое тестовое событие \" + randomInt(1,100) };",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "        const comment = { content: randomString(20) };",
+                      "        const createdComment = await api.addComment(publishedEvent.id, createdUser.id, comment);",
+                      "        pm.collectionVariables.set('commentId', createdComment.id);",
+                      "        const user2 = { name: randomString(6) + \" \" + randomString(10), email: randomString(8) + \"@mail.com\" };",
+                      "        const createdUser2 = await api.addUser(user2);",
+                      "        pm.collectionVariables.set('userId', createdUser2.id);",
+                      "        pm.variables.set(\"updateComment\", \"update - \" + randomString(20));",
+                      "    } catch (err) { console.error('❌ Ошибка:', err); }",
+                      "};",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => { try { await main(); } catch (e) { console.error(e); } finally { clearInterval(interval); } }, 100);",
+                      "function randomString(length) { const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'; let result = ''; for (let i = 0; i < length; i++) { result += chars.charAt(Math.floor(Math.random() * chars.length)); } return result; };",
+                      "function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; };"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Статус 403 Forbidden\", function () {",
+                      "    pm.response.to.have.status(403);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поля\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.all.keys('error', 'message', 'status', 'timestamp', 'path');",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "X-Explore-With-Me-User-Id",
+                    "value": "{{userId}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"content\":\"{{updateComment}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments/{{commentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments",
+                    "{{commentId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Редактирование(негативный - комментарий не принадлежит событию)",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "    try {",
+                      "        const user = { name: randomString(6) + \" \" + randomString(10), email: randomString(8) + \"@mail.com\" };",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "        const category = { name: randomString(7) };",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "        const event = { annotation: \"Тестовое событие для комментариев\", category: createdCategory.id, description: \"Описание тестового события\", eventDate: \"2026-12-31 15:10:05\", location: { lat: 55.7558, lon: 37.6173 }, paid: false, participantLimit: 10, requestModeration: true, title: \"Мое тестовое событие \" + randomInt(1,100) };",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "        const comment = { content: randomString(20) };",
+                      "        const createdComment = await api.addComment(publishedEvent.id, createdUser.id, comment);",
+                      "        pm.collectionVariables.set('commentId', createdComment.id);",
+                      "        const event2 = { annotation: \"Тестовое событие для комментариев\", category: createdCategory.id, description: \"Описание тестового события\", eventDate: \"2026-12-31 15:10:05\", location: { lat: 55.7558, lon: 37.6173 }, paid: false, participantLimit: 10, requestModeration: true, title: \"Мое тестовое событие \" + randomInt(1,100) };",
+                      "        let createdEvent2 = await api.addEvent(createdUser.id, event2);",
+                      "        pm.collectionVariables.set('eventId', createdEvent2.id);",
+                      "        const publishedEvent2 = await api.publishEvent(createdEvent2.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent2.id);",
+                      "        pm.variables.set(\"updateComment\", \"update - \" + randomString(20));",
+                      "    } catch (err) { console.error('❌ Ошибка:', err); }",
+                      "};",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => { try { await main(); } catch (e) { console.error(e); } finally { clearInterval(interval); } }, 100);",
+                      "function randomString(length) { const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'; let result = ''; for (let i = 0; i < length; i++) { result += chars.charAt(Math.floor(Math.random() * chars.length)); } return result; };",
+                      "function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; };"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Статус 409 Conflict\", function () {",
+                      "    pm.response.to.have.status(409);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поля\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.all.keys('error', 'message', 'status', 'timestamp', 'path');",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "X-Explore-With-Me-User-Id",
+                    "value": "{{userId}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"content\":\"{{updateComment}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments/{{commentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments",
+                    "{{commentId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Редактирование(позитивный)",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "    try {",
+                      "        const user = { name: randomString(6) + \" \" + randomString(10), email: randomString(8) + \"@mail.com\" };",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "        const category = { name: randomString(7) };",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "        const event = { annotation: \"Тестовое событие для комментариев\", category: createdCategory.id, description: \"Описание тестового события\", eventDate: \"2026-12-31 15:10:05\", location: { lat: 55.7558, lon: 37.6173 }, paid: false, participantLimit: 10, requestModeration: true, title: \"Мое тестовое событие \" + randomInt(1,100) };",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "        const comment = { content: randomString(20) };",
+                      "        const createdComment = await api.addComment(publishedEvent.id, createdUser.id, comment);",
+                      "        pm.collectionVariables.set('commentId', createdComment.id);",
+                      "        pm.variables.set(\"updateComment\", \"update - \" + randomString(20));",
+                      "    } catch (err) { console.error('❌ Ошибка:', err); }",
+                      "};",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => { try { await main(); } catch (e) { console.error(e); } finally { clearInterval(interval); } }, 100);",
+                      "function randomString(length) { const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'; let result = ''; for (let i = 0; i < length; i++) { result += chars.charAt(Math.floor(Math.random() * chars.length)); } return result; };",
+                      "function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; };"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Статус 200 Ok\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поля\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.all.keys('id', 'content', 'author', 'status', 'created','event');",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "X-Explore-With-Me-User-Id",
+                    "value": "{{userId}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"content\":\"{{updateComment}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments/{{commentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments",
+                    "{{commentId}}"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Создание комментария",
+          "item": [
+            {
+              "name": "Добавление(негативный - content length = 5001)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Статус 400 Bad Request\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поля\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.all.keys('error', 'message', 'status', 'timestamp', 'path');",
+                      "});"
+                    ]
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: \"Иван Петров\",",
+                      "            email: \"ivan.petrov@example.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: \"Концерты\"",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие\"",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "    } catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "X-Explore-With-Me-User-Id",
+                    "value": "{{userId}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"content\":\"123456789\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Добавление(негативный - content length = 9)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Статус 400 Bad Request\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поля\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.all.keys('error', 'message', 'status', 'timestamp', 'path');",
+                      "});"
+                    ]
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: \"Иван Петров\",",
+                      "            email: \"ivan.petrov@example.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: \"Концерты\"",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие\"",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "    } catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "X-Explore-With-Me-User-Id",
+                    "value": "{{userId}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"content\":\"123456789\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Добавление(позитивный)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Статус 201 Created\", function () {",
+                      "    pm.response.to.have.status(201);",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ в формате JSON\", function () {",
+                      "    pm.response.to.be.json;",
+                      "});",
+                      "",
+                      "pm.test(\"Ответ содержит все поля\", function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.all.keys('id', 'content', 'author', 'status', 'created', 'event');",
+                      "});"
+                    ]
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "",
+                      "    try {",
+                      "        // СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ",
+                      "        const user = {",
+                      "            name: \"Иван Петров\",",
+                      "            email: \"ivan.petrov@example.com\"",
+                      "        };",
+                      "",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "",
+                      "        // СОЗДАЕМ КАТЕГОРИЮ",
+                      "        const category = {",
+                      "            name: \"Концерты\"",
+                      "        };",
+                      "",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "",
+                      "        // СОЗДАЕМ СОБЫТИЕ",
+                      "        const event = {",
+                      "            annotation: \"Тестовое событие для комментариев\",",
+                      "            category: createdCategory.id,",
+                      "            description: \"Описание тестового события\",",
+                      "            eventDate: \"2026-12-31 15:10:05\",",
+                      "            location: {",
+                      "                lat: 55.7558,",
+                      "                lon: 37.6173",
+                      "            },",
+                      "            paid: false,",
+                      "            participantLimit: 10,",
+                      "            requestModeration: true,",
+                      "            title: \"Мое тестовое событие\"",
+                      "        };",
+                      "",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "",
+                      "        // ПУБЛИКУЕМ СОБЫТИЕ",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "",
+                      "    } catch (err) {",
+                      "        console.error('❌ Ошибка:', err);",
+                      "    }",
+                      "};",
+                      "",
+                      "// Запускаем",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => {",
+                      "    try {",
+                      "        await main();",
+                      "    } catch (e) {",
+                      "        console.error(e);",
+                      "    } finally {",
+                      "        clearInterval(interval);",
+                      "    }",
+                      "}, 100);"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "X-Explore-With-Me-User-Id",
+                    "value": "{{userId}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"content\":\"Это событие века, лучшее исполнение рамштайна на гуслях\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Удаление комментария",
+          "item": [
+            {
+              "name": "Удаление(негативный - commentId Not Found)",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "    try {",
+                      "        const user = { name: randomString(6) + \" \" + randomString(10), email: randomString(8) + \"@mail.com\" };",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "        const category = { name: randomString(7) };",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "        const event = { annotation: \"Тестовое событие для комментариев\", category: createdCategory.id, description: \"Описание тестового события\", eventDate: \"2026-12-31 15:10:05\", location: { lat: 55.7558, lon: 37.6173 }, paid: false, participantLimit: 10, requestModeration: true, title: \"Мое тестовое событие \" + randomInt(1,100) };",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "        const comment = { content: randomString(20) };",
+                      "        const createdComment = await api.addComment(publishedEvent.id, createdUser.id, comment);",
+                      "        pm.collectionVariables.set('commentId', 99999999);",
+                      "    } catch (err) { console.error('❌ Ошибка:', err); }",
+                      "};",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => { try { await main(); } catch (e) { console.error(e); } finally { clearInterval(interval); } }, 100);",
+                      "function randomString(length) { const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'; let result = ''; for (let i = 0; i < length; i++) { result += chars.charAt(Math.floor(Math.random() * chars.length)); } return result; };",
+                      "function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; };"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Статус 404 Not Found\", function () {",
+                      "    pm.response.to.have.status(404);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "X-Explore-With-Me-User-Id",
+                    "value": "{{userId}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments/{{commentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments",
+                    "{{commentId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Удаление(негативный - eventId Not Found)",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "    try {",
+                      "        const user = { name: randomString(6) + \" \" + randomString(10), email: randomString(8) + \"@mail.com\" };",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "        const category = { name: randomString(7) };",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "        const event = { annotation: \"Тестовое событие для комментариев\", category: createdCategory.id, description: \"Описание тестового события\", eventDate: \"2026-12-31 15:10:05\", location: { lat: 55.7558, lon: 37.6173 }, paid: false, participantLimit: 10, requestModeration: true, title: \"Мое тестовое событие \" + randomInt(1,100) };",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "        const comment = { content: randomString(20) };",
+                      "        const createdComment = await api.addComment(publishedEvent.id, createdUser.id, comment);",
+                      "        pm.collectionVariables.set('commentId', createdComment.id);",
+                      "        pm.collectionVariables.set('eventId', 9999999);",
+                      "    } catch (err) { console.error('❌ Ошибка:', err); }",
+                      "};",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => { try { await main(); } catch (e) { console.error(e); } finally { clearInterval(interval); } }, 100);",
+                      "function randomString(length) { const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'; let result = ''; for (let i = 0; i < length; i++) { result += chars.charAt(Math.floor(Math.random() * chars.length)); } return result; };",
+                      "function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; };"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Статус 404 Not Found\", function () {",
+                      "    pm.response.to.have.status(404);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "X-Explore-With-Me-User-Id",
+                    "value": "{{userId}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments/{{commentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments",
+                    "{{commentId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Удаление(негативный - user Forbidden)",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "    try {",
+                      "        const user = { name: randomString(6) + \" \" + randomString(10), email: randomString(8) + \"@mail.com\" };",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "        const category = { name: randomString(7) };",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "        const event = { annotation: \"Тестовое событие для комментариев\", category: createdCategory.id, description: \"Описание тестового события\", eventDate: \"2026-12-31 15:10:05\", location: { lat: 55.7558, lon: 37.6173 }, paid: false, participantLimit: 10, requestModeration: true, title: \"Мое тестовое событие \" + randomInt(1,100) };",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "        const comment = { content: randomString(20) };",
+                      "        const createdComment = await api.addComment(publishedEvent.id, createdUser.id, comment);",
+                      "        pm.collectionVariables.set('commentId', createdComment.id);",
+                      "        const user2 = { name: randomString(6) + \" \" + randomString(10), email: randomString(8) + \"@mail.com\" };",
+                      "        const createdUser2 = await api.addUser(user2);",
+                      "        pm.collectionVariables.set('userId', createdUser2.id);",
+                      "    } catch (err) { console.error('❌ Ошибка:', err); }",
+                      "};",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => { try { await main(); } catch (e) { console.error(e); } finally { clearInterval(interval); } }, 100);",
+                      "function randomString(length) { const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'; let result = ''; for (let i = 0; i < length; i++) { result += chars.charAt(Math.floor(Math.random() * chars.length)); } return result; };",
+                      "function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; };"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Статус 403 Forbidden\", function () {",
+                      "    pm.response.to.have.status(403);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "X-Explore-With-Me-User-Id",
+                    "value": "{{userId}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments/{{commentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments",
+                    "{{commentId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Удаление(позитивный)",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const main = async () => {",
+                      "    const api = new API(pm, 'http://localhost:8080');",
+                      "    try {",
+                      "        const user = { name: randomString(6) + \" \" + randomString(10), email: randomString(8) + \"@mail.com\" };",
+                      "        const createdUser = await api.addUser(user);",
+                      "        pm.collectionVariables.set('userId', createdUser.id);",
+                      "        const category = { name: randomString(7) };",
+                      "        const createdCategory = await api.addCategory(category);",
+                      "        pm.collectionVariables.set('categoryId', createdCategory.id);",
+                      "        const event = { annotation: \"Тестовое событие для комментариев\", category: createdCategory.id, description: \"Описание тестового события\", eventDate: \"2026-12-31 15:10:05\", location: { lat: 55.7558, lon: 37.6173 }, paid: false, participantLimit: 10, requestModeration: true, title: \"Мое тестовое событие \" + randomInt(1,100) };",
+                      "        let createdEvent = await api.addEvent(createdUser.id, event);",
+                      "        pm.collectionVariables.set('eventId', createdEvent.id);",
+                      "        const publishedEvent = await api.publishEvent(createdEvent.id);",
+                      "        pm.collectionVariables.set('eventId', publishedEvent.id);",
+                      "        const comment = { content: randomString(20) };",
+                      "        const createdComment = await api.addComment(publishedEvent.id, createdUser.id, comment);",
+                      "        pm.collectionVariables.set('commentId', createdComment.id);",
+                      "        pm.variables.set(\"updateComment\", \"update - \" + randomString(20));",
+                      "    } catch (err) { console.error('❌ Ошибка:', err); }",
+                      "};",
+                      "const interval = setInterval(() => {}, 1000);",
+                      "setTimeout(async () => { try { await main(); } catch (e) { console.error(e); } finally { clearInterval(interval); } }, 100);",
+                      "function randomString(length) { const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'; let result = ''; for (let i = 0; i < length; i++) { result += chars.charAt(Math.floor(Math.random() * chars.length)); } return result; };",
+                      "function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; };"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Статус 204 No Content\", function () {",
+                      "    pm.response.to.have.status(204);",
+                      "});",
+                      "",
+                      "baseUrl = pm.collectionVariables.get(\"baseUrl\");",
+                      "eventId = pm.collectionVariables.get('eventId');",
+                      "commentId = pm.collectionVariables.get('commentId');",
+                      "userId = pm.collectionVariables.get('userId');",
+                      "",
+                      "pm.sendRequest({",
+                      "        url:  baseUrl + \"/events/\" + eventId + \"/comments/\" + commentId,",
+                      "        method: 'DELETE',",
+                      "         header: {",
+                      "                'Content-Type': 'application/json',",
+                      "                'X-Explore-With-Me-User-Id': String(userId)",
+                      "            },",
+                      "    }, (error, response) => {",
+                      "        pm.test(\"Подтверждение удаления\", function () {",
+                      "            pm.expect(response.code).to.eql(404);",
+                      "        });",
+                      "    });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "X-Explore-With-Me-User-Id",
+                    "value": "{{userId}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/events/{{eventId}}/comments/{{commentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "events",
+                    "{{eventId}}",
+                    "comments",
+                    "{{commentId}}"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          "API = class {",
+          "    constructor(postman, baseUrlMain = 'http://localhost:8080') {",
+          "        this.baseUrlMain = baseUrlMain;",
+          "        this.pm = postman;",
+          "    }",
+          "",
+          "    async addUser(user) {",
+          "        return this.sendRequest('POST', '/admin/users', user);",
+          "    }",
+          "",
+          "    async addCategory(category) {",
+          "        return this.sendRequest('POST', '/admin/categories', category);",
+          "    }",
+          "",
+          "    async addEvent(userId, event) {",
+          "        return this.sendRequest('POST', '/users/' + userId + '/events', event);",
+          "    }",
+          "",
+          "    async publishEvent(eventId) {",
+          "        return this.sendRequest('PATCH', '/admin/events/' + eventId, { stateAction: 'PUBLISH_EVENT' });",
+          "    }",
+          "",
+          "    async approveComment(commentId) {",
+          "        return this.sendRequest('PATCH', '/admin/comments/' + commentId + '/approve');",
+          "    }",
+          "",
+          "    async rejectComment(commentId) {",
+          "        return this.sendRequest('PATCH', '/admin/comments/' + commentId + '/reject');",
+          "    }",
+          "",
+          "   async addComment(eventId, userId, comment) {",
+          "    return new Promise((resolve, reject) => {",
+          "        const request = {",
+          "            url: this.baseUrlMain + '/events/' + eventId + '/comments',",
+          "            method: 'POST',",
+          "            header: {",
+          "                'Content-Type': 'application/json',",
+          "                'X-Explore-With-Me-User-Id': String(userId)",
+          "            },",
+          "            body: JSON.stringify(comment)",
+          "        };",
+          "",
+          "        this.pm.sendRequest(request, (error, response) => {",
+          "            if (error || (response.code >= 400 && response.code <= 599)) {",
+          "                const err = error ? error : JSON.stringify(response.json());",
+          "                reject(new Error('Ошибка: ' + err));",
+          "                return;",
+          "            }",
+          "            try {",
+          "                resolve(response.json());",
+          "            } catch (e) {",
+          "                resolve(response);",
+          "            }",
+          "        });",
+          "    });",
+          "}",
+          "",
+          "    async sendRequest(method, path, body = null) {",
+          "        return new Promise((resolve, reject) => {",
+          "            const request = {",
+          "                url: this.baseUrlMain + path,",
+          "                method: method,",
+          "                header: { 'Content-Type': 'application/json' }",
+          "            };",
+          "            if (body) {",
+          "                request.body = JSON.stringify(body);",
+          "            }",
+          "",
+          "            this.pm.sendRequest(request, (error, response) => {",
+          "                if (error || (response.code >= 400 && response.code <= 599)) {",
+          "                    const err = error ? error : JSON.stringify(response.json());",
+          "                    reject(new Error('Ошибка: ' + err));",
+          "                    return;",
+          "                }",
+          "                try {",
+          "                    resolve(response.json());",
+          "                } catch (e) {",
+          "                    resolve(response);",
+          "                }",
+          "            });",
+          "        });",
+          "    }",
+          "};"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+       {
+      "key": "userId",
+      "value": "1"
+    },
+    {
+      "key": "userName",
+      "value": "1"
+    },
+    {
+      "key": "categoryId",
+      "value": "1"
+    },
+    {
+      "key": "eventId",
+      "value": "1"
+    },
+    {
+      "key": "eventTitle",
+      "value": "1"
+    },
+    {
+      "key": "eventState",
+      "value": "1"
+    },
+    {
+      "key": "commentId",
+      "value": "1"
+    },
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "updateComment",
+      "value": "1"
+    },
+    {
+      "key": "newComment",
+      "value": "1"
+    }
+  ]
+}
