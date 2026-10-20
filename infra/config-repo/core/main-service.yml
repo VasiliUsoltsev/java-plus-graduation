@@ -18,4 +18,4 @@ stat:
   app:
     name: ewm-main-service
   service:
-    id: stat-server
+    id: stats-server
