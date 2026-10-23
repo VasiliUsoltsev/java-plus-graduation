@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: discovery-server
+
+server:
+  port: 8761
+
+eureka:
+  client:
+    registerWithEureka: false
+    fetchRegistry: false
+  server:
+    eviction-interval-timer-in-ms: 5000
+    response-cache-update-interval-ms: 1000
+    enable-self-preservation: false
