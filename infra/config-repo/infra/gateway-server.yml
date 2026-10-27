@@ -8,20 +8,40 @@ spring:
         locator:
           enabled: false
       routes:
-        - id: main-service-admin
-          uri: lb://main-service
+        - id: comment-service-admin
+          uri: lb://comment-service
           predicates:
-            - Path=/admin/**
+            - Path=/admin/comments/**
 
-        - id: main-service-public
-          uri: lb://main-service
+        - id: comment-service-private
+          uri: lb://comment-service
+          predicates:
+            - Path=/events/{eventId}/comments/**
+
+        - id: request-service-private
+          uri: lb://request-service
+          predicates:
+            - Path=/users/{userId}/requests/**
+
+        - id: user-service-admin
+          uri: lb://user-service
+          predicates:
+            - Path=/admin/users,/admin/users/**
+
+        - id: event-service-admin
+          uri: lb://event-service
+          predicates:
+            - Path=/admin/categories/**,/admin/compilations/**,/admin/events/**
+
+        - id: event-service-public
+          uri: lb://event-service
           predicates:
             - Path=/categories/**,/compilations/**,/events/**
 
-        - id: main-service-private
-          uri: lb://main-service
+        - id: event-service-private
+          uri: lb://event-service
           predicates:
-            - Path=/users/**
+            - Path=/users/{userId}/events/**
 
 management:
   endpoints:

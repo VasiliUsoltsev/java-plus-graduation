@@ -27,7 +27,7 @@ public class StatClientAutoConfiguration {
     }
 
     @Bean
-    public StatClient statClient(@Value("${stat.app.name:ewm-main-service}") String appName,
+    public StatClient statClient(@Value("${stat.app.name:ewm-event-service}") String appName,
                                  @Value("${stat.service.id:stats-server}") String statsServiceId,
                                  DiscoveryClient discoveryClient,
                                  RetryTemplate statClientRetryTemplate) {
