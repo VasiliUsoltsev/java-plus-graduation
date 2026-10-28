@@ -43,6 +43,11 @@ spring:
           predicates:
             - Path=/users/{userId}/events/**
 
+        - id: stats-service-private
+          uri: lb://stats-server
+          predicates:
+            - Path=/hit, /stats
+
 management:
   endpoints:
     web:

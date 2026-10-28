@@ -4,7 +4,8 @@ import lombok.Builder;
 
 @Builder
 public record UserDto(
-    Long id,
-    String name,
-    String email
-) {}
+        Long id,
+        String name,
+        String email
+) {
+}

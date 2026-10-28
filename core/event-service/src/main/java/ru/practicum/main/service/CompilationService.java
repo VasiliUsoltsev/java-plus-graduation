@@ -1,10 +1,10 @@
 package ru.practicum.main.service;
 
+import org.springframework.data.domain.Pageable;
 import ru.practicum.main.dto.request.NewCompilationDto;
 import ru.practicum.main.dto.request.UpdateCompilationRequest;
 import ru.practicum.main.dto.response.CompilationDto;
 
-import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface CompilationService {

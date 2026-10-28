@@ -9,15 +9,18 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.main.controller.PrivateEventController;
 import ru.practicum.main.dto.LocationDto;
+import ru.practicum.main.dto.client.ParticipationRequestDto;
+import ru.practicum.main.dto.client.ParticipationStatus;
 import ru.practicum.main.dto.enums.EventStateAction;
-import ru.practicum.main.dto.enums.RequestStatus;
 import ru.practicum.main.dto.request.EventRequestStatusUpdateRequest;
 import ru.practicum.main.dto.request.NewEventDto;
 import ru.practicum.main.dto.request.UpdateEventUserRequest;
-import ru.practicum.main.dto.response.*;
+import ru.practicum.main.dto.response.CategoryDto;
+import ru.practicum.main.dto.response.EventFullDto;
+import ru.practicum.main.dto.response.EventRequestStatusUpdateResult;
+import ru.practicum.main.dto.response.EventShortDto;
 import ru.practicum.main.exception.model.NotFoundException;
 import ru.practicum.main.model.enums.EventState;
-import ru.practicum.main.model.enums.ParticipationStatus;
 import ru.practicum.main.service.EventService;
 
 import java.time.LocalDateTime;
@@ -56,8 +59,7 @@ class PrivateEventControllerTest {
                 .eventDate(LocalDateTime.of(2026, Month.DECEMBER, 1, 18, 0))
                 .title("Test Event")
                 .paid(false)
-                .category(new CategoryDto(1L, "Концерты"))
-                .initiator(new UserShortDto(1L, "John Doe"))
+                .category(CategoryDto.builder().id(1L).name("Концерты").build())
                 .confirmedRequests(0L)
                 .views(0L)
                 .build();
@@ -125,8 +127,7 @@ class PrivateEventControllerTest {
                 .paid(false)
                 .participantLimit(0)
                 .requestModeration(true)
-                .category(new CategoryDto(1L, "Концерты"))
-                .initiator(new UserShortDto(1L, "John Doe"))
+                .category(CategoryDto.builder().id(1L).name("Концерты").build())
                 .confirmedRequests(0L)
                 .views(0L)
                 .build();
@@ -246,8 +247,7 @@ class PrivateEventControllerTest {
                 .paid(false)
                 .participantLimit(0)
                 .requestModeration(true)
-                .category(new CategoryDto(1L, "Концерты"))
-                .initiator(new UserShortDto(1L, "John Doe"))
+                .category(CategoryDto.builder().id(1L).name("Концерты").build())
                 .confirmedRequests(0L)
                 .views(0L)
                 .build();
@@ -290,8 +290,7 @@ class PrivateEventControllerTest {
                 .paid(false)
                 .participantLimit(0)
                 .requestModeration(true)
-                .category(new CategoryDto(1L, "Концерты"))
-                .initiator(new UserShortDto(1L, "John Doe"))
+                .category(CategoryDto.builder().id(1L).name("Концерты").build())
                 .confirmedRequests(0L)
                 .views(0L)
                 .build();
@@ -360,7 +359,7 @@ class PrivateEventControllerTest {
     void changeRequestStatus_ShouldReturnOk_WhenValidRequest() throws Exception {
         EventRequestStatusUpdateRequest request = EventRequestStatusUpdateRequest.builder()
                 .requestIds(Arrays.asList(1L, 2L))
-                .status(RequestStatus.CONFIRMED)
+                .status(ParticipationStatus.CONFIRMED)
                 .build();
 
         EventRequestStatusUpdateResult response = EventRequestStatusUpdateResult.builder()
@@ -386,7 +385,7 @@ class PrivateEventControllerTest {
     void changeRequestStatus_ShouldReturnNotFound_WhenEventDoesNotExist() throws Exception {
         EventRequestStatusUpdateRequest request = EventRequestStatusUpdateRequest.builder()
                 .requestIds(Arrays.asList(1L))
-                .status(RequestStatus.CONFIRMED)
+                .status(ParticipationStatus.CONFIRMED)
                 .build();
 
         when(eventService.changeRequestStatus(eq(1L), eq(999L), any(EventRequestStatusUpdateRequest.class)))

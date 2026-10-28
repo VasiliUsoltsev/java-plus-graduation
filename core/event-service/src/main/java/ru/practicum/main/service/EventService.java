@@ -1,15 +1,10 @@
 package ru.practicum.main.service;
 
-import ru.practicum.main.dto.request.AdminEventSearchParams;
-import ru.practicum.main.dto.request.EventRequestStatusUpdateRequest;
-import ru.practicum.main.dto.request.NewEventDto;
-import ru.practicum.main.dto.request.PublicEventSearchParams;
-import ru.practicum.main.dto.request.UpdateEventAdminRequest;
-import ru.practicum.main.dto.request.UpdateEventUserRequest;
+import ru.practicum.main.dto.client.ParticipationRequestDto;
+import ru.practicum.main.dto.request.*;
 import ru.practicum.main.dto.response.EventFullDto;
 import ru.practicum.main.dto.response.EventRequestStatusUpdateResult;
 import ru.practicum.main.dto.response.EventShortDto;
-import ru.practicum.main.dto.client.ParticipationRequestDto;
 
 import java.util.List;
 

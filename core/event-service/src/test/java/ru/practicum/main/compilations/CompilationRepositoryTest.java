@@ -14,7 +14,6 @@ import ru.practicum.main.model.Category;
 import ru.practicum.main.model.Compilation;
 import ru.practicum.main.model.Event;
 import ru.practicum.main.model.Location;
-import ru.practicum.main.model.User;
 import ru.practicum.main.model.enums.EventState;
 import ru.practicum.main.repository.CompilationRepository;
 
@@ -39,32 +38,21 @@ class CompilationRepositoryTest {
     private Compilation compilation2;
     private Compilation compilation3;
     private Event event;
-    private User user;
     private Category category;
     private Location location;
 
     @BeforeEach
     void setUp() {
-        // Создаем пользователя
-        user = User.builder()
-                .name("Test User")
-                .email("test@example.com")
-                .build();
-        entityManager.persist(user);
-
-        // Создаем категорию
         category = Category.builder()
                 .name("Test Category")
                 .build();
         entityManager.persist(category);
 
-        // Создаем локацию
         location = Location.builder()
                 .lat(55.7558f)
                 .lon(37.6173f)
                 .build();
 
-        // Создаем событие
         event = Event.builder()
                 .annotation("Test Annotation")
                 .description("Test Description")
@@ -75,14 +63,12 @@ class CompilationRepositoryTest {
                 .state(EventState.PENDING)
                 .participantLimit(0)
                 .requestModeration(true)
-                .initiator(user)
                 .category(category)
                 .location(location)
                 .build();
         entityManager.persist(event);
         entityManager.flush();
 
-        // ВАЖНО: создаем НОВЫЙ изменяемый список для каждой подборки
         List<Event> events1 = new ArrayList<>();
         events1.add(event);
 
@@ -92,7 +78,6 @@ class CompilationRepositoryTest {
         List<Event> events3 = new ArrayList<>();
         events3.add(event);
 
-        // Создаем подборки с отдельными списками
         compilation1 = Compilation.builder()
                 .title("Pinned Compilation 1")
                 .pinned(true)
@@ -111,7 +96,6 @@ class CompilationRepositoryTest {
                 .events(events3)
                 .build();
 
-        // Сохраняем подборки
         compilation1 = entityManager.persist(compilation1);
         compilation2 = entityManager.persist(compilation2);
         compilation3 = entityManager.persist(compilation3);
@@ -169,13 +153,11 @@ class CompilationRepositoryTest {
 
     @Test
     void save_ShouldPersistCompilationWithEvents() {
-        // Создаем новую локацию
         Location newLocation = Location.builder()
                 .lat(55.7558f)
                 .lon(37.6173f)
                 .build();
 
-        // Создаем новое событие
         Event newEvent = Event.builder()
                 .annotation("New Event Annotation")
                 .description("New Event Description")
@@ -186,14 +168,12 @@ class CompilationRepositoryTest {
                 .state(EventState.PENDING)
                 .participantLimit(10)
                 .requestModeration(true)
-                .initiator(user)
                 .category(category)
                 .location(newLocation)
                 .build();
         entityManager.persist(newEvent);
         entityManager.flush();
 
-        // Создаем НОВЫЙ изменяемый список
         List<Event> newEvents = new ArrayList<>();
         newEvents.add(newEvent);
 
@@ -222,24 +202,19 @@ class CompilationRepositoryTest {
         Compilation found = compilationRepository.findById(compilationId).orElse(null);
         assertThat(found).isNull();
 
-        // Проверяем, что события не удалились
         Event eventStillExists = entityManager.find(Event.class, event.getId());
         assertThat(eventStillExists).isNotNull();
     }
 
     @Test
     void update_ShouldModifyExistingCompilation() {
-        // Получаем ID для обновления
         Long compilationId = compilation1.getId();
 
-        // Находим подборку для обновления
         Compilation compilationToUpdate = compilationRepository.findById(compilationId)
                 .orElseThrow(() -> new AssertionError("Compilation not found"));
 
-        // Обновляем поля
         compilationToUpdate.setTitle("Updated Title");
         compilationToUpdate.setPinned(false);
-
 
         Compilation updated = compilationRepository.save(compilationToUpdate);
         entityManager.flush();
@@ -288,7 +263,6 @@ class CompilationRepositoryTest {
                 .state(EventState.PENDING)
                 .participantLimit(10)
                 .requestModeration(true)
-                .initiator(user)
                 .category(category)
                 .location(newLocation)
                 .build();
@@ -297,10 +271,8 @@ class CompilationRepositoryTest {
 
         Long compilationId = compilation1.getId();
 
-
         Compilation compilationToUpdate = compilationRepository.findById(compilationId)
                 .orElseThrow(() -> new AssertionError("Compilation not found"));
-
 
         List<Event> updatedEvents = new ArrayList<>(compilationToUpdate.getEvents());
         updatedEvents.add(newEvent);
@@ -315,5 +287,32 @@ class CompilationRepositoryTest {
         assertThat(found.getEvents()).hasSize(2);
         assertThat(found.getEvents()).extracting(Event::getTitle)
                 .containsExactlyInAnyOrder("Test Event", "New Event");
+    }
+
+    @Test
+    void existsByTitle_ShouldReturnTrueWhenCompilationExists() {
+        assertThat(compilationRepository.existsByTitle("Pinned Compilation 1")).isTrue();
+        assertThat(compilationRepository.existsByTitle("Not Pinned Compilation")).isTrue();
+    }
+
+    @Test
+    void existsByTitle_ShouldReturnFalseWhenCompilationDoesNotExist() {
+        assertThat(compilationRepository.existsByTitle("Unknown Compilation")).isFalse();
+    }
+
+    @Test
+    void existsByTitleAndIdNot_ShouldReturnTrueWhenTitleExistsForOtherCompilation() {
+        assertThat(compilationRepository.existsByTitleAndIdNot("Pinned Compilation 1", compilation2.getId())).isTrue();
+        assertThat(compilationRepository.existsByTitleAndIdNot("Pinned Compilation 1", compilation3.getId())).isTrue();
+    }
+
+    @Test
+    void existsByTitleAndIdNot_ShouldReturnFalseWhenTitleBelongsToSameCompilation() {
+        assertThat(compilationRepository.existsByTitleAndIdNot("Pinned Compilation 1", compilation1.getId())).isFalse();
+    }
+
+    @Test
+    void existsByTitleAndIdNot_ShouldReturnFalseWhenTitleDoesNotExist() {
+        assertThat(compilationRepository.existsByTitleAndIdNot("Unknown Compilation", compilation1.getId())).isFalse();
     }
 }

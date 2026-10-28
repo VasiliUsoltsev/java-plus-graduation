@@ -13,4 +13,5 @@ public record PublicEventSearchFilter(
         LocalDateTime rangeStart,
         LocalDateTime rangeEnd,
         Boolean onlyAvailable
-) {}
+) {
+}

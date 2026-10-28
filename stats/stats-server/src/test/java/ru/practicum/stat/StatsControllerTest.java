@@ -9,7 +9,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.stat.controller.StatsController;
 import ru.practicum.stat.dto.EndpointHit;
-import ru.practicum.stat.dto.StatsRequest;
 import ru.practicum.stat.dto.ViewStats;
 import ru.practicum.stat.service.StatsService;
 
@@ -18,6 +17,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -40,7 +40,6 @@ class StatsControllerTest {
 
     @Test
     void saveHit_shouldReturnCreatedStatus() throws Exception {
-        // Given
         LocalDateTime timestamp = LocalDateTime.parse("2026-08-27 10:00:00", formatter);
         EndpointHit hitDto = EndpointHit.builder()
                 .app("test-app")
@@ -50,7 +49,6 @@ class StatsControllerTest {
                 .build();
 
         doNothing().when(statsService).saveHit(any(EndpointHit.class));
-
 
         mockMvc.perform(post("/hit")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -62,7 +60,6 @@ class StatsControllerTest {
 
     @Test
     void getStats_withAllParams_shouldReturnStats() throws Exception {
-
         LocalDateTime start = LocalDateTime.parse("2026-08-27 00:00:00", formatter);
         LocalDateTime end = LocalDateTime.parse("2026-08-27 02:00:00", formatter);
 
@@ -71,13 +68,13 @@ class StatsControllerTest {
                 new ViewStats("another-app", "/test/2", 1L)
         );
 
-        when(statsService.getStats(any(StatsRequest.class))).thenReturn(expectedStats);
-
+        when(statsService.getStats(eq(start), eq(end), eq(List.of("/test/1", "/test/2")), eq(true)))
+                .thenReturn(expectedStats);
 
         mockMvc.perform(get("/stats")
                         .param("start", start.format(formatter))
                         .param("end", end.format(formatter))
-                        .param("uris", "/test/1", "/test/2")
+                        .param("uris", "/test/1,/test/2")
                         .param("unique", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].app").value("test-app"))
@@ -87,12 +84,11 @@ class StatsControllerTest {
                 .andExpect(jsonPath("$[1].uri").value("/test/2"))
                 .andExpect(jsonPath("$[1].hits").value(1));
 
-        verify(statsService, times(1)).getStats(any(StatsRequest.class));
+        verify(statsService, times(1)).getStats(eq(start), eq(end), eq(List.of("/test/1", "/test/2")), eq(true));
     }
 
     @Test
     void getStats_withoutUris_shouldReturnStats() throws Exception {
-
         LocalDateTime start = LocalDateTime.parse("2026-08-27 09:00:00", formatter);
         LocalDateTime end = LocalDateTime.parse("2026-08-27 11:00:00", formatter);
 
@@ -101,9 +97,8 @@ class StatsControllerTest {
                 new ViewStats("another-app", "/test/2", 1L)
         );
 
-        when(statsService.getStats(any(StatsRequest.class)))
+        when(statsService.getStats(eq(start), eq(end), eq(List.of()), eq(false)))
                 .thenReturn(expectedStats);
-
 
         mockMvc.perform(get("/stats")
                         .param("start", start.format(formatter))
@@ -114,14 +109,12 @@ class StatsControllerTest {
                 .andExpect(jsonPath("$[0].uri").value("/test/1"))
                 .andExpect(jsonPath("$[0].hits").value(3));
 
-        verify(statsService, times(1)).getStats(any(StatsRequest.class));
+        verify(statsService, times(1)).getStats(eq(start), eq(end), eq(List.of()), eq(false));
     }
 
     @Test
     void getStats_withInvalidDateFormat_shouldReturnBadRequest() throws Exception {
-
         String invalidDate = "2026-08-27 10:00";
-
 
         mockMvc.perform(get("/stats")
                         .param("start", invalidDate)
@@ -131,16 +124,14 @@ class StatsControllerTest {
 
     @Test
     void saveHit_withInvalidData_shouldReturnBadRequest() throws Exception {
-
         LocalDateTime fixedDate = LocalDateTime.parse("2026-08-27 10:00:00", formatter);
 
         EndpointHit invalidHit = EndpointHit.builder()
-                .app("") // Пустое поле должно вызвать ошибку валидации
+                .app("")
                 .uri("/test/1")
                 .ip("192.168.1.1")
                 .timestamp(fixedDate)
                 .build();
-
 
         mockMvc.perform(post("/hit")
                         .contentType(MediaType.APPLICATION_JSON)

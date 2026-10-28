@@ -1,10 +1,9 @@
 package ru.practicum.main.user.controller;
 
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Positive;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.main.user.dto.response.UserShortDto;
 import ru.practicum.main.user.model.User;

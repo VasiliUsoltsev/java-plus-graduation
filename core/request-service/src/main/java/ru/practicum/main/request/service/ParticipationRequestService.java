@@ -1,6 +1,5 @@
 package ru.practicum.main.request.service;
 
-import org.springframework.data.repository.query.Param;
 import ru.practicum.main.request.dto.response.ParticipationRequestDto;
 import ru.practicum.main.request.model.enums.ParticipationStatus;
 

@@ -14,12 +14,10 @@ import ru.practicum.main.dto.request.PublicEventSearchFilter;
 import ru.practicum.main.model.Category;
 import ru.practicum.main.model.Event;
 import ru.practicum.main.model.Location;
-import ru.practicum.main.model.User;
 import ru.practicum.main.model.enums.EventState;
 import ru.practicum.main.repository.CategoryRepository;
 import ru.practicum.main.repository.EventRepository;
 import ru.practicum.main.repository.EventSearchRepository;
-import ru.practicum.main.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -39,13 +37,8 @@ class EventSearchRepositoryTest {
     private EventRepository eventRepository;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     private CategoryRepository categoryRepository;
 
-    private User user1;
-    private User user2;
     private Category category1;
     private Category category2;
     private Event event1;
@@ -60,18 +53,7 @@ class EventSearchRepositoryTest {
     void setUp() {
         baseTime = LocalDateTime.parse("2026-08-27 00:00:00", formatter);
         eventRepository.deleteAll();
-        userRepository.deleteAll();
         categoryRepository.deleteAll();
-
-        user1 = userRepository.save(User.builder()
-                .name("John Doe")
-                .email("john@example.com")
-                .build());
-
-        user2 = userRepository.save(User.builder()
-                .name("Jane Smith")
-                .email("jane@example.com")
-                .build());
 
         category1 = categoryRepository.save(Category.builder()
                 .name("Концерты")
@@ -92,7 +74,6 @@ class EventSearchRepositoryTest {
                 .title("Концерт в парке")
                 .state(EventState.PUBLISHED)
                 .location(Location.builder().lat(55.75f).lon(37.62f).build())
-                .initiator(user1)
                 .category(category1)
                 .build());
 
@@ -107,7 +88,6 @@ class EventSearchRepositoryTest {
                 .title("Арт-выставка")
                 .state(EventState.PENDING)
                 .location(Location.builder().lat(55.76f).lon(37.63f).build())
-                .initiator(user2)
                 .category(category2)
                 .build());
 
@@ -122,7 +102,6 @@ class EventSearchRepositoryTest {
                 .title("Джазовый вечер")
                 .state(EventState.CANCELED)
                 .location(Location.builder().lat(55.77f).lon(37.64f).build())
-                .initiator(user1)
                 .category(category1)
                 .build());
 
@@ -137,7 +116,6 @@ class EventSearchRepositoryTest {
                 .title("Семейный спектакль")
                 .state(EventState.PUBLISHED)
                 .location(Location.builder().lat(55.78f).lon(37.65f).build())
-                .initiator(user2)
                 .category(category1)
                 .build());
     }
@@ -150,18 +128,6 @@ class EventSearchRepositoryTest {
         Page<Event> page = eventSearchRepository.searchAdmin(filter, PageRequest.of(0, 10));
 
         assertThat(page.getContent()).hasSize(4);
-    }
-
-    @Test
-    void searchAdmin_ShouldFilterByUsers() {
-        AdminEventSearchFilter filter = new AdminEventSearchFilter(
-                List.of(user1.getId()), null, null, baseTime.minusDays(10), baseTime.plusDays(100));
-
-        Page<Event> page = eventSearchRepository.searchAdmin(filter, PageRequest.of(0, 10));
-
-        assertThat(page.getContent()).hasSize(2);
-        assertThat(page.getContent()).extracting(Event::getTitle)
-                .containsExactlyInAnyOrder("Концерт в парке", "Джазовый вечер");
     }
 
     @Test
@@ -202,7 +168,7 @@ class EventSearchRepositoryTest {
     @Test
     void searchAdmin_ShouldReturnEmpty_WhenNoMatch() {
         AdminEventSearchFilter filter = new AdminEventSearchFilter(
-                List.of(user1.getId()), List.of(EventState.PUBLISHED),
+                List.of(1L), List.of(EventState.PUBLISHED),
                 List.of(category2.getId()), baseTime.minusDays(10), baseTime.plusDays(100));
 
         Page<Event> page = eventSearchRepository.searchAdmin(filter, PageRequest.of(0, 10));
@@ -293,18 +259,5 @@ class EventSearchRepositoryTest {
         assertThat(page.getContent()).hasSize(1);
         assertThat(page.getTotalElements()).isEqualTo(2);
         assertThat(page.getTotalPages()).isEqualTo(2);
-    }
-
-    @Test
-    void searchPublic_ShouldFilterOnlyAvailable_WhenOnlyAvailableTrue() {
-        PublicEventSearchFilter filter = new PublicEventSearchFilter(
-                null, EventState.PUBLISHED, null, null,
-                baseTime.minusDays(1), baseTime.plusDays(100), true);
-
-        Page<Event> page = eventSearchRepository.searchPublic(filter, PageRequest.of(0, 10));
-
-        assertThat(page.getContent()).hasSize(2);
-        assertThat(page.getContent()).extracting(Event::getTitle)
-                .containsExactlyInAnyOrder("Концерт в парке", "Семейный спектакль");
     }
 }

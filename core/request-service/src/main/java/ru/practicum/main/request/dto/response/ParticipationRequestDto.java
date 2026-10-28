@@ -1,6 +1,9 @@
 package ru.practicum.main.request.dto.response;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import ru.practicum.main.request.model.enums.ParticipationStatus;
 
 import java.time.LocalDateTime;

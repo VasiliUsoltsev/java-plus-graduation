@@ -11,4 +11,5 @@ public record AdminEventSearchFilter(
         List<Long> categories,
         LocalDateTime rangeStart,
         LocalDateTime rangeEnd
-) {}
+) {
+}

@@ -1,13 +1,13 @@
 package ru.practicum.main.user.controller;
 
-import jakarta.validation.constraints.Min;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
-import ru.practicum.main.dto.response.UserDto;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.main.dto.response.UserDto;
 import ru.practicum.main.user.dto.request.NewUserRequest;
 import ru.practicum.main.user.dto.request.UsersRequest;
 import ru.practicum.main.user.service.UserService;

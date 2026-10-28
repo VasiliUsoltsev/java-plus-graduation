@@ -14,7 +14,6 @@ import ru.practicum.main.dto.request.AdminEventSearchParams;
 import ru.practicum.main.dto.request.UpdateEventAdminRequest;
 import ru.practicum.main.dto.response.CategoryDto;
 import ru.practicum.main.dto.response.EventFullDto;
-import ru.practicum.main.dto.response.UserShortDto;
 import ru.practicum.main.exception.model.ConflictException;
 import ru.practicum.main.exception.model.NotFoundException;
 import ru.practicum.main.model.enums.EventState;
@@ -70,8 +69,7 @@ class AdminEventControllerTest {
                 .paid(false)
                 .participantLimit(0)
                 .requestModeration(true)
-                .category(new CategoryDto(1L, "Концерты"))
-                .initiator(new UserShortDto(1L, "John Doe"))
+                .category(CategoryDto.builder().id(1L).name("Концерты").build())
                 .confirmedRequests(0L)
                 .views(0L)
                 .build();
@@ -146,8 +144,7 @@ class AdminEventControllerTest {
                 .paid(false)
                 .participantLimit(0)
                 .requestModeration(true)
-                .category(new CategoryDto(1L, "Концерты"))
-                .initiator(new UserShortDto(1L, "John Doe"))
+                .category(CategoryDto.builder().id(1L).name("Концерты").build())
                 .confirmedRequests(0L)
                 .views(0L)
                 .build();

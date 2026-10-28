@@ -7,10 +7,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestParam;
 import ru.practicum.main.client.EventCommentClient;
 import ru.practicum.main.client.ParticipationRequestClient;
 import ru.practicum.main.client.UserClient;
+import ru.practicum.main.dto.client.ParticipationRequestDto;
 import ru.practicum.main.dto.client.ParticipationStatus;
 import ru.practicum.main.dto.client.UserShortDto;
 import ru.practicum.main.dto.enums.AdminStateAction;
@@ -20,12 +20,13 @@ import ru.practicum.main.dto.request.*;
 import ru.practicum.main.dto.response.EventFullDto;
 import ru.practicum.main.dto.response.EventRequestStatusUpdateResult;
 import ru.practicum.main.dto.response.EventShortDto;
-import ru.practicum.main.dto.client.ParticipationRequestDto;
 import ru.practicum.main.exception.model.*;
 import ru.practicum.main.model.Category;
 import ru.practicum.main.model.Event;
 import ru.practicum.main.model.enums.EventState;
-import ru.practicum.main.repository.*;
+import ru.practicum.main.repository.CategoryRepository;
+import ru.practicum.main.repository.EventRepository;
+import ru.practicum.main.repository.EventSearchRepository;
 import ru.practicum.main.service.EventService;
 import ru.practicum.main.service.mapper.EventMapper;
 import ru.practicum.stat.client.StatClient;
@@ -389,7 +390,7 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException(String.format(EVENT_NOT_FOUND_EXCEPTION, eventId)));
 
-        EventFullDto result =  EventMapper.toFullDto(
+        EventFullDto result = EventMapper.toFullDto(
                 event,
                 getConfirmedRequests(eventId),
                 getViews(event),
@@ -404,11 +405,6 @@ public class EventServiceImpl implements EventService {
         return eventRepository.findByEventIdAndInitiator(eventId, userId)
                 .orElseThrow(() -> new NotFoundException(String.format(EVENT_NOT_FOUND_EXCEPTION, eventId)));
     }
-
-    /*private User getUser(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(String.format(USER_NOT_FOUND_EXCEPTION, userId)));
-    }*/
 
     private Category getCategory(Long categoryId) {
         return categoryRepository.findById(categoryId)
@@ -562,53 +558,33 @@ public class EventServiceImpl implements EventService {
     }
 
     private List<ParticipationRequestDto> getRequestsByEventId(Long eventId) {
-        try {
-            return participationRequestClient.findAllByEventId(eventId);
-        } catch (FeignException.NotFound exception) {
-            throw new NotFoundException(REQUEST_IDS_NOT_FOUND);
-        } catch (FeignException exception) {
-            throw new RequestServiceUnavailableException(eventId, exception);
-        }
+        return participationRequestClient.findAllByEventId(eventId);
     }
 
     private List<ParticipationRequestDto> getRequestByIds(Collection<Long> ids) {
-        try {
-            return participationRequestClient.findAllByIdIn(ids);
-        } catch (FeignException exception) {
-            throw new RequestServiceUnavailableException(exception);
-        }
+        return participationRequestClient.findAllByIdIn(ids);
     }
 
     private List<Object[]> getCountEventIds(List<Long> eventIds, ParticipationStatus status) {
-        try {
-            return participationRequestClient.countByEventIdsAndStatus(eventIds,status);
-        } catch (FeignException exception) {
-            throw new RequestServiceUnavailableException(exception);
-        }
+        return participationRequestClient.countByEventIdsAndStatus(eventIds, status);
     }
 
     private Long getCountEventId(Long eventId, ParticipationStatus status) {
         try {
-            return participationRequestClient.countByEventAndStatus(eventId,status);
-        } catch (FeignException exception) {
-            throw new RequestServiceUnavailableException(exception);
+            // В случае успешного запроса
+            return participationRequestClient.countByEventAndStatus(eventId, status);
+        } catch (RequestServiceUnavailableException exception) {
+            // В случае если сервис недоступен
+            return 0L;
         }
     }
 
     private Integer rejectRemainingPending(Long eventId, List<Long> excludeIds) {
-        try {
-            return participationRequestClient.rejectRemainingPending(eventId, excludeIds);
-        } catch (FeignException exception) {
-            throw new RequestServiceUnavailableException(exception);
-        }
+        return participationRequestClient.rejectRemainingPending(eventId, excludeIds);
     }
 
     private Integer confirmRequestsAtomically(List<Long> ids, Long eventId, int limit) {
-        try {
-            return participationRequestClient.confirmRequestsAtomically(ids, eventId, limit);
-        } catch (FeignException exception) {
-            throw new RequestServiceUnavailableException(exception);
-        }
+        return participationRequestClient.confirmRequestsAtomically(ids, eventId, limit);
     }
 }
 

@@ -52,7 +52,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         if (event.getState() != EventState.PUBLISHED) {
             throw new ConflictException("Event is not published");
         }
-        if (event.getInitiator().equals(userId)) {
+        if (event.getInitiator() != null && event.getInitiator().id().equals(userId)) {
             throw new ConflictException("Initiator cannot participate in their own event");
         }
         if (requestRepository.findByEventAndRequester(eventId, userId).isPresent()) {

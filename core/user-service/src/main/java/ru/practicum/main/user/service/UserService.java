@@ -1,7 +1,5 @@
 package ru.practicum.main.user.service;
 
-import jakarta.validation.constraints.Positive;
-import org.springframework.web.bind.annotation.PathVariable;
 import ru.practicum.main.dto.response.UserDto;
 import ru.practicum.main.user.dto.request.NewUserRequest;
 import ru.practicum.main.user.dto.request.UsersRequest;

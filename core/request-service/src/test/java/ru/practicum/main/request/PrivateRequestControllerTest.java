@@ -8,10 +8,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.main.request.controller.PrivateRequestController;
 import ru.practicum.main.request.dto.response.ParticipationRequestDto;
-import ru.practicum.main.request.model.enums.ParticipationStatus;
-import ru.practicum.main.request.service.ParticipationRequestService;
 import ru.practicum.main.request.exception.model.ConflictException;
 import ru.practicum.main.request.exception.model.NotFoundException;
+import ru.practicum.main.request.model.enums.ParticipationStatus;
+import ru.practicum.main.request.service.ParticipationRequestService;
 
 import java.time.LocalDateTime;
 import java.util.List;

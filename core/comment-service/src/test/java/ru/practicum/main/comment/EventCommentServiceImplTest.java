@@ -31,9 +31,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -70,22 +68,16 @@ class EventCommentServiceImplTest {
                 .email("test@mail.com")
                 .build();
 
-        event = new EventDto(
-                1L,
-                "Test Event",
-                "Test annotation",
-                LocalDateTime.now().plusDays(5),
-                LocalDateTime.now(),
-                null,
-                false,
-                0,
-                true,
-                "Test Event",
-                null,
-                null,
-                1L,
-                1L
-        );
+        event = EventDto.builder()
+                .id(1L)
+                .title("Test Event")
+                .annotation("Test annotation")
+                .eventDate(LocalDateTime.now().plusDays(5))
+                .createdOn(LocalDateTime.now())
+                .paid(false)
+                .participantLimit(0)
+                .requestModeration(true)
+                .build();
 
         comment = EventComment.builder()
                 .id(1L)
@@ -159,6 +151,8 @@ class EventCommentServiceImplTest {
         verify(eventClient, times(1)).existsById(1L);
         verify(userClient, times(1)).existsById(1L);
         verify(eventCommentRepository, times(1)).save(any(EventComment.class));
+        verify(eventClient, times(1)).findById(1L);
+        verify(userClient, times(1)).findUserById(1L);
     }
 
     @Test
@@ -196,6 +190,8 @@ class EventCommentServiceImplTest {
         verify(eventClient, times(1)).existsById(1L);
         verify(userClient, times(1)).existsById(1L);
         verify(eventCommentRepository, times(1)).save(any(EventComment.class));
+        verify(eventClient, times(1)).findById(1L);
+        verify(userClient, times(1)).findUserById(1L);
     }
 
     @Test
@@ -264,6 +260,7 @@ class EventCommentServiceImplTest {
         verify(eventClient, times(1)).existsById(1L);
         verify(eventCommentRepository, times(1))
                 .findByEventAndStatus(eq(1L), eq(EventCommentStatus.APPROVED), any(Pageable.class));
+        verify(userClient, times(1)).findUserById(1L);
     }
 
     @Test
@@ -342,6 +339,8 @@ class EventCommentServiceImplTest {
         assertEquals(EventCommentStatus.APPROVED, result.getStatus());
         verify(eventCommentRepository, times(1)).findById(1L);
         verify(eventCommentRepository, times(1)).save(any(EventComment.class));
+        verify(eventClient, times(1)).findById(1L);
+        verify(userClient, times(1)).findUserById(1L);
     }
 
     // ==================== reject ====================
@@ -360,6 +359,8 @@ class EventCommentServiceImplTest {
         assertEquals(EventCommentStatus.REJECTED, result.getStatus());
         verify(eventCommentRepository, times(1)).findById(1L);
         verify(eventCommentRepository, times(1)).save(any(EventComment.class));
+        verify(eventClient, times(1)).findById(1L);
+        verify(userClient, times(1)).findUserById(1L);
     }
 
     // ==================== getCommentById ====================
@@ -377,6 +378,8 @@ class EventCommentServiceImplTest {
         assertEquals(comment.getId(), result.getId());
         assertEquals(comment.getContent(), result.getContent());
         verify(eventCommentRepository, times(1)).findById(1L);
+        verify(eventClient, times(1)).findById(1L);
+        verify(userClient, times(1)).findUserById(1L);
     }
 
     // ==================== getAllComments ====================
@@ -396,6 +399,8 @@ class EventCommentServiceImplTest {
         assertEquals(3, result.size());
         verify(eventCommentRepository, times(1)).findAll(any(Pageable.class));
         verify(eventCommentRepository, never()).findByStatus(any(EventCommentStatus.class), any(Pageable.class));
+        verify(eventClient, times(3)).findById(anyLong());
+        verify(userClient, times(3)).findUserById(anyLong());
     }
 
     @Test
@@ -415,6 +420,8 @@ class EventCommentServiceImplTest {
         assertEquals(EventCommentStatus.WAITING, result.getFirst().getStatus());
         verify(eventCommentRepository, times(1)).findByStatus(eq(EventCommentStatus.WAITING), any(Pageable.class));
         verify(eventCommentRepository, never()).findAll(any(Pageable.class));
+        verify(eventClient, times(1)).findById(anyLong());
+        verify(userClient, times(1)).findUserById(anyLong());
     }
 
     // ==================== ConflictException в approve/reject ====================

@@ -6,13 +6,14 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import ru.practicum.main.client.fallbackFactory.ParticipationRequestClientFallbackFactory;
 import ru.practicum.main.dto.client.ParticipationRequestDto;
 import ru.practicum.main.dto.client.ParticipationStatus;
 
 import java.util.Collection;
 import java.util.List;
 
-@FeignClient(name = "request-service")
+@FeignClient(name = "request-service", fallbackFactory = ParticipationRequestClientFallbackFactory.class)
 public interface ParticipationRequestClient {
     @GetMapping("/internal/{eventId}")
     List<ParticipationRequestDto> findAllByEventId(@PathVariable @Positive Long eventId);

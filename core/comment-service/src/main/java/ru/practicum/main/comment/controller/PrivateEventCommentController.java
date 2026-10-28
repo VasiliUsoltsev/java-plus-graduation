@@ -1,7 +1,6 @@
 package ru.practicum.main.comment.controller;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.main.comment.dto.request.*;
+import ru.practicum.main.comment.dto.request.EventCommentDto;
+import ru.practicum.main.comment.dto.request.EventCommentParamDto;
+import ru.practicum.main.comment.dto.request.GetEventCommentParamDto;
+import ru.practicum.main.comment.dto.request.NewEventCommentParamDto;
 import ru.practicum.main.comment.dto.response.EventCommentAuthorDto;
 import ru.practicum.main.comment.dto.response.EventCommentUserDto;
 import ru.practicum.main.comment.service.EventCommentService;

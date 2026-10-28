@@ -13,3 +13,11 @@ spring:
   sql:
     init:
       mode: always
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            loggerLevel: basic
+            connectTimeout: 2000
+            readTimeout: 3000

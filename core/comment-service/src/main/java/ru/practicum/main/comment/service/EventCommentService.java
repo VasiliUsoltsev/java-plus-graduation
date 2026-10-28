@@ -1,6 +1,5 @@
 package ru.practicum.main.comment.service;
 
-import org.springframework.data.repository.query.Param;
 import ru.practicum.main.comment.dto.request.*;
 import ru.practicum.main.comment.dto.response.EventCommentAdminDto;
 import ru.practicum.main.comment.dto.response.EventCommentAuthorDto;

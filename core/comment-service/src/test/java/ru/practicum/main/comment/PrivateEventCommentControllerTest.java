@@ -13,11 +13,11 @@ import ru.practicum.main.comment.controller.PrivateEventCommentController;
 import ru.practicum.main.comment.dto.request.EventCommentDto;
 import ru.practicum.main.comment.dto.request.EventCommentParamDto;
 import ru.practicum.main.comment.dto.request.GetEventCommentParamDto;
+import ru.practicum.main.comment.dto.request.NewEventCommentParamDto;
 import ru.practicum.main.comment.dto.response.EventCommentAuthorDto;
 import ru.practicum.main.comment.dto.response.EventCommentUserDto;
 import ru.practicum.main.comment.model.enums.EventCommentStatus;
 import ru.practicum.main.comment.service.EventCommentService;
-import ru.practicum.main.comment.dto.request.NewEventCommentParamDto;
 
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;

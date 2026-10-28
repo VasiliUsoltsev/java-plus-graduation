@@ -11,6 +11,7 @@ import ru.practicum.main.request.client.EventClient;
 import ru.practicum.main.request.client.UserClient;
 import ru.practicum.main.request.dto.client.EventDto;
 import ru.practicum.main.request.dto.client.EventState;
+import ru.practicum.main.request.dto.client.UserDto;
 import ru.practicum.main.request.dto.response.ParticipationRequestDto;
 import ru.practicum.main.request.exception.model.ConflictException;
 import ru.practicum.main.request.exception.model.EventServiceUnavailableException;
@@ -29,9 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ParticipationRequestServiceImplTest {
@@ -50,25 +49,29 @@ class ParticipationRequestServiceImplTest {
 
     private EventDto event;
     private ParticipationRequest request;
+    private UserDto initiator;
 
     @BeforeEach
     void setUp() {
-        event = new EventDto(
-                10L,
-                "Test event",
-                "Test description",
-                LocalDateTime.now().plusDays(5),
-                LocalDateTime.now(),
-                null,
-                false,
-                0,
-                true,
-                "Test Event",
-                EventState.PUBLISHED,
-                null,
-                1L,
-                1L
-        );
+        initiator = UserDto.builder()
+                .id(1L)
+                .name("Initiator")
+                .email("initiator@example.com")
+                .build();
+
+        event = EventDto.builder()
+                .id(10L)
+                .annotation("Test event")
+                .description("Test description")
+                .eventDate(LocalDateTime.now().plusDays(5))
+                .createdOn(LocalDateTime.now())
+                .paid(false)
+                .participantLimit(0)
+                .requestModeration(true)
+                .title("Test Event")
+                .state(EventState.PUBLISHED)
+                .initiator(initiator)
+                .build();
 
         request = ParticipationRequest.builder()
                 .id(1L)
@@ -111,12 +114,8 @@ class ParticipationRequestServiceImplTest {
 
     @Test
     void createRequest_ShouldReturnPending_WhenModerationEnabledAndLimitNotZero() {
-        event = new EventDto(
-                10L, "Test event", "Test description",
-                LocalDateTime.now().plusDays(5), LocalDateTime.now(), null,
-                false, 5, true, "Test Event", EventState.PUBLISHED,
-                null, 1L, 1L
-        );
+        event.setParticipantLimit(5);
+        event.setRequestModeration(true);
         when(eventClient.findById(10L)).thenReturn(event);
         when(requestRepository.findByEventAndRequester(10L, 2L)).thenReturn(Optional.empty());
         when(requestRepository.countByEventAndStatus(10L, ParticipationStatus.CONFIRMED)).thenReturn(0L);
@@ -136,12 +135,8 @@ class ParticipationRequestServiceImplTest {
 
     @Test
     void createRequest_ShouldReturnConfirmed_WhenModerationDisabled() {
-        event = new EventDto(
-                10L, "Test event", "Test description",
-                LocalDateTime.now().plusDays(5), LocalDateTime.now(), null,
-                false, 0, false, "Test Event", EventState.PUBLISHED,
-                null, 1L, 1L
-        );
+        event.setParticipantLimit(0);
+        event.setRequestModeration(false);
         when(eventClient.findById(10L)).thenReturn(event);
         when(requestRepository.findByEventAndRequester(10L, 2L)).thenReturn(Optional.empty());
         when(requestRepository.countByEventAndStatus(10L, ParticipationStatus.CONFIRMED)).thenReturn(0L);
@@ -168,12 +163,7 @@ class ParticipationRequestServiceImplTest {
 
     @Test
     void createRequest_ShouldThrowConflictException_WhenEventNotPublished() {
-        event = new EventDto(
-                10L, "Test event", "Test description",
-                LocalDateTime.now().plusDays(5), LocalDateTime.now(), null,
-                false, 0, true, "Test Event", EventState.PENDING,
-                null, 1L, 1L
-        );
+        event.setState(EventState.PENDING);
         when(eventClient.findById(10L)).thenReturn(event);
 
         assertThatThrownBy(() -> requestService.createRequest(2L, 10L))
@@ -202,12 +192,8 @@ class ParticipationRequestServiceImplTest {
 
     @Test
     void createRequest_ShouldThrowConflictException_WhenParticipantLimitReached() {
-        event = new EventDto(
-                10L, "Test event", "Test description",
-                LocalDateTime.now().plusDays(5), LocalDateTime.now(), null,
-                false, 1, true, "Test Event", EventState.PUBLISHED,
-                null, 1L, 1L
-        );
+        event.setParticipantLimit(1);
+        event.setRequestModeration(true);
         when(eventClient.findById(10L)).thenReturn(event);
         when(requestRepository.findByEventAndRequester(10L, 2L)).thenReturn(Optional.empty());
         when(requestRepository.countByEventAndStatus(10L, ParticipationStatus.CONFIRMED)).thenReturn(1L);
