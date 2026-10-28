@@ -1,0 +1,264 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Event service internal API",
+    "description": "Внутренний API сервиса событий для межсервисного взаимодействия (используется Feign-клиентами из request-service и comment-service).",
+    "version": "v0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:{port}",
+      "description": "Порт выдаётся сервису при запуске и может различаться",
+      "variables": {
+        "port": {
+          "default": "8081",
+          "description": "Порт event-service (динамический)"
+        }
+      }
+    }
+  ],
+  "tags": [
+    {
+      "name": "EventInternalController",
+      "description": "Внутренние эндпоинты для межсервисного взаимодействия"
+    }
+  ],
+  "paths": {
+    "/internal/events/{eventId}": {
+      "get": {
+        "tags": ["EventInternalController"],
+        "summary": "Получение события по идентификатору",
+        "description": "Возвращает полную информацию о событии. Используется Feign-клиентами EventClient (request-service, comment-service).",
+        "operationId": "getEvent",
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "description": "Идентификатор события",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Событие найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventFullDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный идентификатор события"
+          },
+          "404": {
+            "description": "Событие не найдено"
+          },
+          "503": {
+            "description": "Сервис-зависимость (user/request/comment/stats) недоступен"
+          }
+        }
+      }
+    },
+    "/internal/events/{eventId}/existsevent": {
+      "get": {
+        "tags": ["EventInternalController"],
+        "summary": "Проверка существования события",
+        "description": "Возвращает true, если событие с заданным идентификатором существует. Используется Feign-клиентами EventClient (comment-service).",
+        "operationId": "existsEventById",
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "description": "Идентификатор события",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Результат проверки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean",
+                  "example": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный идентификатор события"
+          },
+          "503": {
+            "description": "Сервис-зависимость недоступен"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "EventFullDto": {
+        "type": "object",
+        "description": "Полная информация о событии. По структуре соответствует EventDto в Feign-клиентах request-service и comment-service.",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Идентификатор события",
+            "example": 1
+          },
+          "annotation": {
+            "type": "string",
+            "description": "Краткое описание события",
+            "example": "Концерт классической музыки в парке"
+          },
+          "category": {
+            "$ref": "#/components/schemas/CategoryDto"
+          },
+          "confirmedRequests": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Количество подтверждённых заявок на участие",
+            "example": 5
+          },
+          "createdOn": {
+            "type": "string",
+            "description": "Дата и время создания события (yyyy-MM-dd HH:mm:ss)",
+            "example": "2026-08-27 10:00:00"
+          },
+          "description": {
+            "type": "string",
+            "description": "Полное описание события",
+            "example": "Приглашаем вас на великолепный концерт классической музыки"
+          },
+          "eventDate": {
+            "type": "string",
+            "description": "Дата и время события (yyyy-MM-dd HH:mm:ss)",
+            "example": "2026-09-01 18:00:00"
+          },
+          "initiator": {
+            "$ref": "#/components/schemas/UserDto"
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "paid": {
+            "type": "boolean",
+            "description": "Платное ли событие",
+            "example": false
+          },
+          "participantLimit": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Лимит участников (0 — без ограничений)",
+            "example": 0
+          },
+          "publishedOn": {
+            "type": "string",
+            "description": "Дата и время публикации события (yyyy-MM-dd HH:mm:ss)",
+            "example": "2026-08-28 12:00:00"
+          },
+          "requestModeration": {
+            "type": "boolean",
+            "description": "Нужна ли модерация заявок",
+            "example": true
+          },
+          "state": {
+            "$ref": "#/components/schemas/EventState"
+          },
+          "title": {
+            "type": "string",
+            "description": "Заголовок события",
+            "example": "Концерт в парке"
+          },
+          "views": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Количество просмотров",
+            "example": 10
+          },
+          "countEventComment": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Количество комментариев к событию",
+            "example": 3
+          }
+        }
+      },
+      "CategoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Идентификатор категории",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "Название категории",
+            "minLength": 1,
+            "maxLength": 50,
+            "example": "Концерты"
+          }
+        }
+      },
+      "UserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Идентификатор пользователя",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "Имя пользователя",
+            "example": "Иван Иванов"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email пользователя",
+            "example": "ivan@example.com"
+          }
+        }
+      },
+      "Location": {
+        "type": "object",
+        "properties": {
+          "lat": {
+            "type": "number",
+            "format": "float",
+            "description": "Широта",
+            "example": 55.75
+          },
+          "lon": {
+            "type": "number",
+            "format": "float",
+            "description": "Долгота",
+            "example": 37.62
+          }
+        }
+      },
+      "EventState": {
+        "type": "string",
+        "description": "Состояние события",
+        "enum": ["PENDING", "PUBLISHED", "CANCELED"],
+        "example": "PUBLISHED"
+      }
+    }
+  }
+}
