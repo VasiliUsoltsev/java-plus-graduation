@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.practicum.main.user.model.User;
 
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -19,4 +20,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u FROM User u ORDER BY u.id")
     Page<User> findAllOrdered(Pageable pageable);
+
+    @Query("SELECT u.id, u.name FROM User u WHERE u.id IN :ids")
+    List<Object[]> findShortInfoByIds(@Param("ids") Collection<Long> ids);
 }

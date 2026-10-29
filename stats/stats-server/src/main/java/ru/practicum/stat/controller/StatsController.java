@@ -33,13 +33,6 @@ public class StatsController {
             @RequestParam(required = false) String uris,
             @RequestParam(defaultValue = "false") Boolean unique) {
 
-        List<String> urisList = (uris != null && !uris.isBlank())
-                ? Arrays.stream(uris.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .toList()
-                : List.of();
-
-        return statsService.getStats(start, end, urisList, unique);
+        return statsService.getStats(start, end, uris, unique);
     }
 }

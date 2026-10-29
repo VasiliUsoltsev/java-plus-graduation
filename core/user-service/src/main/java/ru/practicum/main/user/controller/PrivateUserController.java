@@ -35,6 +35,11 @@ public class PrivateUserController {
         return userService.findUserShortByIds(userIds);
     }
 
+    @GetMapping("/authornamebatch")
+    public List<Object[]> getAuthorNameBatch(@RequestParam List<Long> authorIds) {
+        return userService.getAuthorNameBatch(authorIds);
+    }
+
     @GetMapping("/{userId}/usershort")
     public UserShortDto findShortById(@Positive @PathVariable Long userId) {
         return userService.findUserShortById(userId);

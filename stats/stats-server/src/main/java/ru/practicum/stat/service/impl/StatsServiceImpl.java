@@ -11,6 +11,7 @@ import ru.practicum.stat.repository.StatsRepository;
 import ru.practicum.stat.service.StatsService;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -39,7 +40,7 @@ public class StatsServiceImpl implements StatsService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, List<String> list, Boolean unique) {
+    public List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, String list, Boolean unique) {
         log.info("getStats - начало: start={}, end={}, uris={}, unique={}",
                 start, end, list, unique);
 
@@ -47,11 +48,15 @@ public class StatsServiceImpl implements StatsService {
             throw new IllegalArgumentException("start must be before or equal to end");
         }
 
+        List<String> uris = (list != null && !list.isBlank())
+                ? Arrays.stream(list.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList()
+                : List.of();
+
         List<ViewStats> result;
-        List<String> uris = list;
         boolean hasUris = uris != null && !uris.isEmpty();
-        log.info("Массив URIS проверяем: кол-во записей={}, данные={}",
-                hasUris ? uris.size() : 0, uris);
 
         if (unique && hasUris) {
             result = repository.getStatsWithUniqueIpAndUris(start, end, uris);

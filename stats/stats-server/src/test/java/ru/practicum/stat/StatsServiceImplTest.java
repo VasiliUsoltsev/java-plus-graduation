@@ -65,7 +65,7 @@ class StatsServiceImplTest {
     void getStats_withUniqueAndUris_shouldCallRepositoryWithUniqueIpAndUris() {
         LocalDateTime start = baseTime.minusMinutes(1);
         LocalDateTime end = baseTime.plusMinutes(10);
-        List<String> uris = List.of("/test/1", "/test/2");
+        String list = "/test/1,/test/2";
         Boolean unique = true;
 
         List<ViewStats> expectedStats = List.of(
@@ -73,13 +73,13 @@ class StatsServiceImplTest {
                 new ViewStats("another-app", "/test/2", 1L)
         );
 
-        when(statsRepository.getStatsWithUniqueIpAndUris(start, end, uris))
+        when(statsRepository.getStatsWithUniqueIpAndUris(start, end, List.of("/test/1", "/test/2")))
                 .thenReturn(expectedStats);
 
-        List<ViewStats> result = statsService.getStats(start, end, uris, unique);
+        List<ViewStats> result = statsService.getStats(start, end, list, unique);
 
         assertThat(result).isEqualTo(expectedStats);
-        verify(statsRepository, times(1)).getStatsWithUniqueIpAndUris(start, end, uris);
+        verify(statsRepository, times(1)).getStatsWithUniqueIpAndUris(start, end, List.of("/test/1", "/test/2"));
         verify(statsRepository, never()).getStatsWithUniqueIpWithoutUris(any(), any());
     }
 
@@ -87,7 +87,7 @@ class StatsServiceImplTest {
     void getStats_withUniqueAndWithoutUris_shouldCallRepositoryWithUniqueIpWithoutUris() {
         LocalDateTime start = baseTime.minusMinutes(1);
         LocalDateTime end = baseTime.plusMinutes(10);
-        List<String> uris = null;
+        String list = null;
         Boolean unique = true;
 
         List<ViewStats> expectedStats = List.of(
@@ -99,7 +99,7 @@ class StatsServiceImplTest {
         when(statsRepository.getStatsWithUniqueIpWithoutUris(start, end))
                 .thenReturn(expectedStats);
 
-        List<ViewStats> result = statsService.getStats(start, end, uris, unique);
+        List<ViewStats> result = statsService.getStats(start, end, list, unique);
 
         assertThat(result).isEqualTo(expectedStats);
         verify(statsRepository, times(1)).getStatsWithUniqueIpWithoutUris(start, end);
@@ -110,20 +110,20 @@ class StatsServiceImplTest {
     void getStats_withoutUniqueAndWithUris_shouldCallRepositoryWithAllAndUris() {
         LocalDateTime start = baseTime.minusMinutes(1);
         LocalDateTime end = baseTime.plusMinutes(10);
-        List<String> uris = List.of("/test/1");
+        String list = "/test/1";
         Boolean unique = false;
 
         List<ViewStats> expectedStats = List.of(
                 new ViewStats("test-app", "/test/1", 3L)
         );
 
-        when(statsRepository.getStatsAllAndUris(start, end, uris))
+        when(statsRepository.getStatsAllAndUris(start, end, List.of("/test/1")))
                 .thenReturn(expectedStats);
 
-        List<ViewStats> result = statsService.getStats(start, end, uris, unique);
+        List<ViewStats> result = statsService.getStats(start, end, list, unique);
 
         assertThat(result).isEqualTo(expectedStats);
-        verify(statsRepository, times(1)).getStatsAllAndUris(start, end, uris);
+        verify(statsRepository, times(1)).getStatsAllAndUris(start, end, List.of("/test/1"));
         verify(statsRepository, never()).getStatsAllWithoutUris(any(), any());
     }
 
@@ -131,7 +131,7 @@ class StatsServiceImplTest {
     void getStats_withoutUniqueAndWithoutUris_shouldCallRepositoryWithAllWithoutUris() {
         LocalDateTime start = baseTime.minusMinutes(1);
         LocalDateTime end = baseTime.plusMinutes(10);
-        List<String> uris = null;
+        String list = null;
         Boolean unique = false;
 
         List<ViewStats> expectedStats = List.of(
@@ -143,7 +143,7 @@ class StatsServiceImplTest {
         when(statsRepository.getStatsAllWithoutUris(start, end))
                 .thenReturn(expectedStats);
 
-        List<ViewStats> result = statsService.getStats(start, end, uris, unique);
+        List<ViewStats> result = statsService.getStats(start, end, list, unique);
 
         assertThat(result).isEqualTo(expectedStats);
         verify(statsRepository, times(1)).getStatsAllWithoutUris(start, end);
@@ -155,7 +155,7 @@ class StatsServiceImplTest {
         LocalDateTime start = baseTime.plusMinutes(10);
         LocalDateTime end = baseTime.minusMinutes(1);
 
-        assertThatThrownBy(() -> statsService.getStats(start, end, List.of(), false))
+        assertThatThrownBy(() -> statsService.getStats(start, end, null, false))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("start must be before or equal to end");
 

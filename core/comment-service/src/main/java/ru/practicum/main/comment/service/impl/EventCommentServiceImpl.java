@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.main.comment.client.EventClient;
 import ru.practicum.main.comment.client.UserClient;
+import ru.practicum.main.comment.dto.client.EventDto;
 import ru.practicum.main.comment.dto.client.UserDto;
 import ru.practicum.main.comment.dto.request.*;
 import ru.practicum.main.comment.dto.response.EventCommentAdminDto;
@@ -24,6 +25,9 @@ import ru.practicum.main.comment.service.EventCommentService;
 import ru.practicum.main.comment.service.mapper.EventCommentMapper;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -114,10 +118,17 @@ public class EventCommentServiceImpl implements EventCommentService {
                 pageable
         );
 
-        return page.getContent().stream()
+        List<EventComment> result = page.getContent();
+
+        List<Long> authorIds = result.stream()
+                .map(eventComment -> eventComment.getAuthor()).
+                toList();
+        Map<Long, String> authorMap = getAuthorNameBatch(authorIds);
+
+        return result.stream()
                 .map(eventComment -> EventCommentMapper.toEventCommentUserDto(
                                 eventComment,
-                                getUser(eventComment.getAuthor()).name()
+                                authorMap.get(eventComment.getAuthor())
                         )
                 )
                 .toList();
@@ -136,16 +147,27 @@ public class EventCommentServiceImpl implements EventCommentService {
             throw new NotFoundException(USER_NOT_FOUND_EXCEPTION + userId);
         }
 
-        return eventCommentRepository.findByEventAndAuthorAndStatusOrderByCreatedDesc(
-                        eventId,
-                        userId,
-                        EventCommentStatus.APPROVED
-                )
-                .stream()
+        List<EventComment> result = eventCommentRepository.findByEventAndAuthorAndStatusOrderByCreatedDesc(
+                eventId,
+                userId,
+                EventCommentStatus.APPROVED
+        );
+
+        List<Long> eventIds = result.stream()
+                .map(eventComment -> eventComment.getEvent()).
+                toList();
+        Map<Long, String> eventMap = getEventTitleBatch(eventIds);
+
+        List<Long> authorIds = result.stream()
+                .map(eventComment -> eventComment.getAuthor()).
+                toList();
+        Map<Long, String> authorMap = getAuthorNameBatch(authorIds);
+
+        return result.stream()
                 .map(eventComment -> EventCommentMapper.toEventCommentAuthorDto(
                                 eventComment,
-                                getEventTitle(eventId),
-                                getUser(userId).name()
+                                eventMap.get(eventComment.getEvent()),
+                                authorMap.get(eventComment.getAuthor())
                         )
                 )
                 .toList();
@@ -207,11 +229,23 @@ public class EventCommentServiceImpl implements EventCommentService {
             );
         }
 
-        return page.getContent().stream()
+        List<EventComment> result = page.getContent();
+
+        List<Long> eventIds = result.stream()
+                .map(eventComment -> eventComment.getEvent()).
+                toList();
+        Map<Long, String> eventMap = getEventTitleBatch(eventIds);
+
+        List<Long> authorIds = result.stream()
+                .map(eventComment -> eventComment.getAuthor()).
+                toList();
+        Map<Long, UserDto> authorMap = getAuthorBatch(authorIds);
+
+        return result.stream()
                 .map(eventComment -> EventCommentMapper.toEventCommentAdminDto(
                                 eventComment,
-                                getEventTitle(eventComment.getEvent()),
-                                getUser(eventComment.getAuthor())
+                                eventMap.get(eventComment.getEvent()),
+                                authorMap.get(eventComment.getAuthor())
                         )
                 )
                 .toList();
@@ -304,6 +338,39 @@ public class EventCommentServiceImpl implements EventCommentService {
         }
     }
 
+    private Map<Long, String> getAuthorNameBatch(List<Long> authorIds) {
+        if (authorIds == null || authorIds.isEmpty()) {
+            return Map.of();
+        }
+
+        try {
+            List<Object[]> counts = userClient.getAuthorNameBatch(authorIds);
+            return counts.stream()
+                    .collect(Collectors.toMap(
+                            row -> ((Number) row[0]).longValue(),
+                            row -> (String) row[1]
+                    ));
+        } catch (FeignException exception) {
+            throw new UserServiceUnavailableException(exception);
+        }
+    }
+
+    private Map<Long, UserDto> getAuthorBatch(List<Long> authorIds) {
+        if (authorIds == null || authorIds.isEmpty()) {
+            return Map.of();
+        }
+
+        try {
+            return userClient.findShortByIds(authorIds).stream()
+                    .collect(Collectors.toMap(
+                            UserDto::id,
+                            Function.identity()
+                    ));
+        } catch (FeignException exception) {
+            throw new UserServiceUnavailableException(exception);
+        }
+    }
+
     private String getEventTitle(Long eventId) {
         try {
             return eventClient.findById(eventId).getTitle();
@@ -311,6 +378,23 @@ public class EventCommentServiceImpl implements EventCommentService {
             throw new NotFoundException("Event with id=" + eventId + " not found");
         } catch (FeignException exception) {
             throw new EventServiceUnavailableException(eventId, exception);
+        }
+    }
+
+    private Map<Long, String> getEventTitleBatch(List<Long> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return Map.of();
+        }
+
+        try {
+            List<Object[]> counts = eventClient.getEventTitleBatch(eventIds);
+            return counts.stream()
+                    .collect(Collectors.toMap(
+                            row -> ((Number) row[0]).longValue(),
+                            row -> (String) row[1]
+                    ));
+        } catch (FeignException exception) {
+            throw new EventServiceUnavailableException(exception);
         }
     }
 }

@@ -65,7 +65,6 @@ class EventCommentServiceImplTest {
         user = UserDto.builder()
                 .id(1L)
                 .name("Test User")
-                .email("test@mail.com")
                 .build();
 
         event = EventDto.builder()
@@ -251,7 +250,8 @@ class EventCommentServiceImplTest {
         Page<EventComment> page = new PageImpl<>(List.of(approvedComment));
         when(eventCommentRepository.findByEventAndStatus(eq(1L), eq(EventCommentStatus.APPROVED), any(Pageable.class)))
                 .thenReturn(page);
-        when(userClient.findUserById(1L)).thenReturn(user);
+        when(userClient.getAuthorNameBatch(List.of(1L)))
+                .thenReturn(List.<Object[]>of(new Object[]{1L, "Test User"}));
 
         List<EventCommentUserDto> result = service.getCommentsByEvent(1L, getParamDto);
 
@@ -260,7 +260,8 @@ class EventCommentServiceImplTest {
         verify(eventClient, times(1)).existsById(1L);
         verify(eventCommentRepository, times(1))
                 .findByEventAndStatus(eq(1L), eq(EventCommentStatus.APPROVED), any(Pageable.class));
-        verify(userClient, times(1)).findUserById(1L);
+        verify(userClient, times(1)).getAuthorNameBatch(anyList());
+        verify(userClient, never()).findUserById(anyLong());
     }
 
     @Test
@@ -284,8 +285,10 @@ class EventCommentServiceImplTest {
         when(eventCommentRepository.findByEventAndAuthorAndStatusOrderByCreatedDesc(
                 1L, 1L, EventCommentStatus.APPROVED))
                 .thenReturn(List.of(approvedComment));
-        when(eventClient.findById(1L)).thenReturn(event);
-        when(userClient.findUserById(1L)).thenReturn(user);
+        when(eventClient.getEventTitleBatch(List.of(1L)))
+                .thenReturn(List.<Object[]>of(new Object[]{1L, "Test Event"}));
+        when(userClient.getAuthorNameBatch(List.of(1L)))
+                .thenReturn(List.<Object[]>of(new Object[]{1L, "Test User"}));
 
         List<EventCommentAuthorDto> result = service.getCommentsEventByUser(paramDto);
 
@@ -296,6 +299,10 @@ class EventCommentServiceImplTest {
         verify(eventCommentRepository, times(1))
                 .findByEventAndAuthorAndStatusOrderByCreatedDesc(
                         1L, 1L, EventCommentStatus.APPROVED);
+        verify(eventClient, times(1)).getEventTitleBatch(anyList());
+        verify(userClient, times(1)).getAuthorNameBatch(anyList());
+        verify(eventClient, never()).findById(anyLong());
+        verify(userClient, never()).findUserById(anyLong());
     }
 
     @Test
@@ -390,8 +397,10 @@ class EventCommentServiceImplTest {
         EventCommentRequestStatus state = EventCommentRequestStatus.ALL;
         Page<EventComment> page = new PageImpl<>(List.of(comment, approvedComment, rejectedComment));
         when(eventCommentRepository.findAll(any(Pageable.class))).thenReturn(page);
-        when(eventClient.findById(anyLong())).thenReturn(event);
-        when(userClient.findUserById(anyLong())).thenReturn(user);
+        when(eventClient.getEventTitleBatch(anyList()))
+                .thenReturn(List.<Object[]>of(new Object[]{1L, "Test Event"}));
+        when(userClient.findShortByIds(anyList()))
+                .thenReturn(List.of(user));
 
         List<EventCommentAdminDto> result = service.getAllComments(state, getParamDto);
 
@@ -399,8 +408,10 @@ class EventCommentServiceImplTest {
         assertEquals(3, result.size());
         verify(eventCommentRepository, times(1)).findAll(any(Pageable.class));
         verify(eventCommentRepository, never()).findByStatus(any(EventCommentStatus.class), any(Pageable.class));
-        verify(eventClient, times(3)).findById(anyLong());
-        verify(userClient, times(3)).findUserById(anyLong());
+        verify(eventClient, times(1)).getEventTitleBatch(anyList());
+        verify(userClient, times(1)).findShortByIds(anyList());
+        verify(eventClient, never()).findById(anyLong());
+        verify(userClient, never()).findUserById(anyLong());
     }
 
     @Test
@@ -410,8 +421,10 @@ class EventCommentServiceImplTest {
         Page<EventComment> page = new PageImpl<>(List.of(comment));
         when(eventCommentRepository.findByStatus(eq(EventCommentStatus.WAITING), any(Pageable.class)))
                 .thenReturn(page);
-        when(eventClient.findById(anyLong())).thenReturn(event);
-        when(userClient.findUserById(anyLong())).thenReturn(user);
+        when(eventClient.getEventTitleBatch(anyList()))
+                .thenReturn(List.<Object[]>of(new Object[]{1L, "Test Event"}));
+        when(userClient.findShortByIds(anyList()))
+                .thenReturn(List.of(user));
 
         List<EventCommentAdminDto> result = service.getAllComments(state, getParamDto);
 
@@ -420,8 +433,10 @@ class EventCommentServiceImplTest {
         assertEquals(EventCommentStatus.WAITING, result.getFirst().getStatus());
         verify(eventCommentRepository, times(1)).findByStatus(eq(EventCommentStatus.WAITING), any(Pageable.class));
         verify(eventCommentRepository, never()).findAll(any(Pageable.class));
-        verify(eventClient, times(1)).findById(anyLong());
-        verify(userClient, times(1)).findUserById(anyLong());
+        verify(eventClient, times(1)).getEventTitleBatch(anyList());
+        verify(userClient, times(1)).findShortByIds(anyList());
+        verify(eventClient, never()).findById(anyLong());
+        verify(userClient, never()).findUserById(anyLong());
     }
 
     // ==================== ConflictException в approve/reject ====================

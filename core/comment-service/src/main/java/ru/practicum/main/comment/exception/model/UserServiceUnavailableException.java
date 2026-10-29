@@ -7,4 +7,8 @@ public class UserServiceUnavailableException extends RuntimeException {
                 cause
         );
     }
+
+    public UserServiceUnavailableException(Throwable cause) {
+        super("Сервис пользователей недоступен!");
+    }
 }

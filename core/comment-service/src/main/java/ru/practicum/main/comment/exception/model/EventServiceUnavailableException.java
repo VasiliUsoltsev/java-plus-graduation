@@ -7,4 +7,8 @@ public class EventServiceUnavailableException extends RuntimeException {
                 cause
         );
     }
+
+    public EventServiceUnavailableException(Throwable cause) {
+        super("Сервис событий недоступен!");
+    }
 }

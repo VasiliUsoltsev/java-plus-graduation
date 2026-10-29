@@ -26,6 +26,7 @@
 		<java.version>21</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring-cloud.version>2023.0.1</spring-cloud.version>
+        <querydsl.version>5.1.0</querydsl.version>
 	</properties>
 
     <dependencyManagement>
@@ -36,6 +37,13 @@
                 <version>${spring-cloud.version}</version>   <!-- 2023.0.1 -->
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.querydsl</groupId>
+                <artifactId>querydsl-jpa</artifactId>
+                <version>${querydsl.version}</version>
+                <classifier>jakarta</classifier>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -401,6 +401,11 @@ public class EventServiceImpl implements EventService {
         return result;
     }
 
+    @Override
+    public List<Object[]> getEventTitleBatch(List<Long> eventIds) {
+        return eventRepository.findShortInfoByIds(eventIds);
+    }
+
     private Event getUserEventOrThrow(Long userId, Long eventId) {
         return eventRepository.findByEventIdAndInitiator(eventId, userId)
                 .orElseThrow(() -> new NotFoundException(String.format(EVENT_NOT_FOUND_EXCEPTION, eventId)));

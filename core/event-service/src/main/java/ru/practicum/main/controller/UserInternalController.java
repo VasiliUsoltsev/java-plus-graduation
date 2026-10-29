@@ -4,12 +4,11 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.practicum.main.dto.response.EventFullDto;
 import ru.practicum.main.service.EventService;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,5 +28,10 @@ public class UserInternalController {
     public Boolean existsEventById(@PathVariable @Positive Long eventId) {
         log.debug("GET - /internal/events/{eventId}/existsevent - метод existsEventById - eventId = " + eventId);
         return eventService.existsEventById(eventId);
+    }
+
+    @GetMapping("/eventsbatch")
+    public List<Object[]> getEventTitleBatch(@RequestParam List<Long> eventIds){
+        return eventService.getEventTitleBatch(eventIds);
     }
 }

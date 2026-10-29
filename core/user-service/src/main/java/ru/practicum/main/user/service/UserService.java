@@ -22,4 +22,6 @@ public interface UserService {
     List<UserShortDto> findUserShortByIds(List<Long> userIds);
 
     UserShortDto findUserShortById(Long userId);
+
+    List<Object[]> getAuthorNameBatch(List<Long> authorIds);
 }

@@ -68,7 +68,7 @@ class StatsControllerTest {
                 new ViewStats("another-app", "/test/2", 1L)
         );
 
-        when(statsService.getStats(eq(start), eq(end), eq(List.of("/test/1", "/test/2")), eq(true)))
+        when(statsService.getStats(eq(start), eq(end), eq("/test/1,/test/2"), eq(true)))
                 .thenReturn(expectedStats);
 
         mockMvc.perform(get("/stats")
@@ -84,7 +84,7 @@ class StatsControllerTest {
                 .andExpect(jsonPath("$[1].uri").value("/test/2"))
                 .andExpect(jsonPath("$[1].hits").value(1));
 
-        verify(statsService, times(1)).getStats(eq(start), eq(end), eq(List.of("/test/1", "/test/2")), eq(true));
+        verify(statsService, times(1)).getStats(eq(start), eq(end), eq("/test/1,/test/2"), eq(true));
     }
 
     @Test
@@ -97,7 +97,7 @@ class StatsControllerTest {
                 new ViewStats("another-app", "/test/2", 1L)
         );
 
-        when(statsService.getStats(eq(start), eq(end), eq(List.of()), eq(false)))
+        when(statsService.getStats(eq(start), eq(end), eq(null), eq(false)))
                 .thenReturn(expectedStats);
 
         mockMvc.perform(get("/stats")
@@ -109,7 +109,7 @@ class StatsControllerTest {
                 .andExpect(jsonPath("$[0].uri").value("/test/1"))
                 .andExpect(jsonPath("$[0].hits").value(3));
 
-        verify(statsService, times(1)).getStats(eq(start), eq(end), eq(List.of()), eq(false));
+        verify(statsService, times(1)).getStats(eq(start), eq(end), eq(null), eq(false));
     }
 
     @Test

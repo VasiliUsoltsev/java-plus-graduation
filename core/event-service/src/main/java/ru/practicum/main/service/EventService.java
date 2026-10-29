@@ -34,4 +34,6 @@ public interface EventService {
     Boolean existsEventById(Long eventId);
 
     EventFullDto getEvent(Long eventId);
+
+    List<Object[]> getEventTitleBatch(List<Long> eventIds);
 }

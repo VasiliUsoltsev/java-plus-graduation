@@ -43,7 +43,6 @@ class AdminEventCommentControllerTest {
         userDto = UserDto.builder()
                 .id(1L)
                 .name("Test Author")
-                .email("test@example.com")
                 .build();
 
         commentAdminDto = EventCommentAdminDto.builder()

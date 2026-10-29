@@ -97,4 +97,9 @@ public class UserServiceImpl implements UserService {
     public UserShortDto findUserShortById(Long userId) {
         return UserMapper.toShortDto(findUserById(userId));
     }
+
+    @Override
+    public List<Object[]> getAuthorNameBatch(List<Long> authorIds) {
+        return userRepository.findShortInfoByIds(authorIds);
+    }
 }
