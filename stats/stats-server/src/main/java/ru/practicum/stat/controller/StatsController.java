@@ -31,7 +31,7 @@ public class StatsController {
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
             @RequestParam(required = false) String uris,
-            @RequestParam(defaultValue = "false") boolean unique) {
+            @RequestParam(defaultValue = "false") Boolean unique) {
 
         List<String> urisList = (uris != null && !uris.isBlank())
                 ? Arrays.stream(uris.split(","))
