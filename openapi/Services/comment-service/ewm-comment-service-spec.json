@@ -1,0 +1,118 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Comment service internal API",
+    "description": "Внутренний API сервиса комментариев для межсервисного взаимодействия (используется Feign-клиентом EventCommentClient из event-service).",
+    "version": "v0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:{port}",
+      "description": "Порт выдаётся сервису при запуске и может различаться",
+      "variables": {
+        "port": {
+          "default": "8084",
+          "description": "Порт comment-service (динамический)"
+        }
+      }
+    }
+  ],
+  "tags": [
+    {
+      "name": "CommentInternalController",
+      "description": "Внутренние эндпоинты для межсервисного взаимодействия"
+    }
+  ],
+  "paths": {
+    "/internal/countEvent/{eventId}": {
+      "get": {
+        "tags": ["CommentInternalController"],
+        "summary": "Подсчёт комментариев по событию",
+        "description": "Возвращает количество комментариев для заданного события. Используется Feign-клиентом EventCommentClient (event-service).",
+        "operationId": "countEvent",
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "description": "Идентификатор события",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Количество комментариев",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int64",
+                  "example": 5
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный идентификатор события"
+          }
+        }
+      }
+    },
+    "/internal/countEvents": {
+      "get": {
+        "tags": ["CommentInternalController"],
+        "summary": "Подсчёт комментариев по списку событий",
+        "description": "Возвращает количество комментариев для каждого из переданных событий. Используется Feign-клиентом EventCommentClient (event-service).",
+        "operationId": "countEvents",
+        "parameters": [
+          {
+            "name": "eventIds",
+            "in": "query",
+            "description": "Список идентификаторов событий",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            },
+            "example": [1, 2, 3]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список пар [eventId, count]",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "description": "Массив пар: [идентификатор события, количество комментариев]",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  },
+                  "example": [[1, 5], [2, 3]]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный список идентификаторов"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

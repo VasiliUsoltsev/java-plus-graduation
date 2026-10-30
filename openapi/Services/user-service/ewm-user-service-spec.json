@@ -1,0 +1,228 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "User service internal API",
+    "description": "Внутренний API сервиса пользователей для межсервисного взаимодействия (используется Feign-клиентами из event-service, request-service и comment-service).",
+    "version": "v0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:{port}",
+      "description": "Порт выдаётся сервису при запуске и может различаться",
+      "variables": {
+        "port": {
+          "default": "8082",
+          "description": "Порт user-service (динамический)"
+        }
+      }
+    }
+  ],
+  "tags": [
+    {
+      "name": "UserInternalController",
+      "description": "Внутренние эндпоинты для межсервисного взаимодействия"
+    }
+  ],
+  "paths": {
+    "/users/{userId}/exists": {
+      "get": {
+        "tags": ["UserInternalController"],
+        "summary": "Проверка существования пользователя",
+        "description": "Возвращает true, если пользователь с заданным идентификатором существует. Используется Feign-клиентами UserClient (request-service, comment-service).",
+        "operationId": "existsById",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "Идентификатор пользователя",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Результат проверки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean",
+                  "example": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный идентификатор пользователя"
+          }
+        }
+      }
+    },
+    "/users/{userId}": {
+      "get": {
+        "tags": ["UserInternalController"],
+        "summary": "Получение пользователя по идентификатору",
+        "description": "Возвращает данные пользователя. Используется Feign-клиентом UserClient (comment-service).",
+        "operationId": "findById",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "Идентификатор пользователя",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Пользователь найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный идентификатор пользователя"
+          },
+          "404": {
+            "description": "Пользователь не найден"
+          }
+        }
+      }
+    },
+    "/users/batchusershort": {
+      "get": {
+        "tags": ["UserInternalController"],
+        "summary": "Получение кратких данных пользователей по списку идентификаторов",
+        "description": "Возвращает список кратких данных (id, name) для переданных идентификаторов. Используется Feign-клиентом UserClient (event-service).",
+        "operationId": "findShortByIds",
+        "parameters": [
+          {
+            "name": "userIds",
+            "in": "query",
+            "description": "Список идентификаторов пользователей",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            },
+            "example": [1, 2, 3]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список кратких данных пользователей",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserShortDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный список идентификаторов"
+          }
+        }
+      }
+    },
+    "/users/{userId}/usershort": {
+      "get": {
+        "tags": ["UserInternalController"],
+        "summary": "Получение кратких данных пользователя по идентификатору",
+        "description": "Возвращает краткие данные (id, name) пользователя. Используется Feign-клиентом UserClient (event-service).",
+        "operationId": "findShortById",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "Идентификатор пользователя",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Краткие данные пользователя",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserShortDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный идентификатор пользователя"
+          },
+          "404": {
+            "description": "Пользователь не найден"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserDto": {
+        "type": "object",
+        "description": "Полные данные пользователя.",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Идентификатор пользователя",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "Имя пользователя",
+            "example": "Иван Иванов"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email пользователя",
+            "example": "ivan@example.com"
+          }
+        }
+      },
+      "UserShortDto": {
+        "type": "object",
+        "description": "Краткие данные пользователя.",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Идентификатор пользователя",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "Имя пользователя",
+            "example": "Иван Иванов"
+          }
+        }
+      }
+    }
+  }
+}

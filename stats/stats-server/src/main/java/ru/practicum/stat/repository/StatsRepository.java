@@ -20,8 +20,8 @@ public interface StatsRepository extends JpaRepository<Hit, Long> {
             "GROUP BY eh.app, eh.uri " +
             "ORDER BY COUNT(DISTINCT eh.ip) DESC")
     List<ViewStats> getStatsWithUniqueIpAndUris(@Param("start") LocalDateTime start,
-                                                   @Param("end") LocalDateTime end,
-                                                   @Param("uris") List<String> uris);
+                                                @Param("end") LocalDateTime end,
+                                                @Param("uris") List<String> uris);
 
     @Query("SELECT new ru.practicum.stat.dto.ViewStats(eh.app, eh.uri, COUNT(DISTINCT eh.ip)) " +
             "FROM Hit eh " +
@@ -29,7 +29,7 @@ public interface StatsRepository extends JpaRepository<Hit, Long> {
             "GROUP BY eh.app, eh.uri " +
             "ORDER BY COUNT(DISTINCT eh.ip) DESC")
     List<ViewStats> getStatsWithUniqueIpWithoutUris(@Param("start") LocalDateTime start,
-                                                       @Param("end") LocalDateTime end);
+                                                    @Param("end") LocalDateTime end);
 
     @Query("SELECT new ru.practicum.stat.dto.ViewStats(eh.app, eh.uri, COUNT(eh.ip)) " +
             "FROM Hit eh " +
@@ -38,8 +38,8 @@ public interface StatsRepository extends JpaRepository<Hit, Long> {
             "GROUP BY eh.app, eh.uri " +
             "ORDER BY COUNT(eh.ip) DESC")
     List<ViewStats> getStatsAllAndUris(@Param("start") LocalDateTime start,
-                                          @Param("end") LocalDateTime end,
-                                          @Param("uris") List<String> uris);
+                                       @Param("end") LocalDateTime end,
+                                       @Param("uris") List<String> uris);
 
     @Query("SELECT new ru.practicum.stat.dto.ViewStats(eh.app, eh.uri, COUNT(eh.ip)) " +
             "FROM Hit eh " +
@@ -47,5 +47,5 @@ public interface StatsRepository extends JpaRepository<Hit, Long> {
             "GROUP BY eh.app, eh.uri " +
             "ORDER BY COUNT(eh.ip) DESC")
     List<ViewStats> getStatsAllWithoutUris(@Param("start") LocalDateTime start,
-                                              @Param("end") LocalDateTime end);
+                                           @Param("end") LocalDateTime end);
 }

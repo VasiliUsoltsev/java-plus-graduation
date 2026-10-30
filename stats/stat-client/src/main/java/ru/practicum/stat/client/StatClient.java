@@ -8,11 +8,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.util.UriComponentsBuilder;
+import ru.practicum.stat.client.exception.StatsServerUnavailable;
 import ru.practicum.stat.dto.EndpointHit;
 import ru.practicum.stat.dto.ViewStats;
-import ru.practicum.stat.client.exception.StatsServerUnavailable;
 
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -94,21 +96,21 @@ public class StatClient {
     public List<ViewStats> getStats(String start, String end, List<String> uris, Boolean unique) {
         try {
             String baseUrl = makeBaseUrl();
-            UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/stats")
-                    .queryParam("start", start)
-                    .queryParam("end", end)
-                    .queryParam("unique", unique != null && unique);
+            StringBuilder urlBuilder = new StringBuilder(baseUrl)
+                    .append("/stats")
+                    .append("?start=").append(URLEncoder.encode(start, StandardCharsets.UTF_8))
+                    .append("&end=").append(URLEncoder.encode(end, StandardCharsets.UTF_8))
+                    .append("&unique=").append(unique != null && unique);
 
             if (uris != null && !uris.isEmpty()) {
-                for (String uri : uris) {
-                    builder.queryParam("uris", uri);
-                }
+                urlBuilder.append("&uris=")
+                        .append(URLEncoder.encode(String.join(",", uris), StandardCharsets.UTF_8));
             }
 
-            String url = builder.build().toUriString();
+            String url = urlBuilder.toString();
 
             return restClient.get()
-                    .uri(url)
+                    .uri(URI.create(url))
                     .retrieve()
                     .body(new ParameterizedTypeReference<List<ViewStats>>() {
                     });
