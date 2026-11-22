@@ -1,0 +1,12 @@
+spring:
+  main:
+    web-application-type: none
+
+kafka:
+  key-serializer: "org.apache.kafka.common.serialization.StringSerializer"
+  value-serializer: "ru.practicum.main.serialization.GeneralAvroSerializer"
+  statsUserTopic: "stats.user-actions.v1"
+
+grpc:
+  server:
+    port: 0

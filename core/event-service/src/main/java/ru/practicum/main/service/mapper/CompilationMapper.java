@@ -22,7 +22,6 @@ public class CompilationMapper {
                                 event,
                                 0L,
                                 0L,
-                                0L,
                                 userMap.get(event.getInitiator())
                         )
                 )

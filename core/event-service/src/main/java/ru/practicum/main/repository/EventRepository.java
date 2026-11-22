@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.practicum.main.model.Event;
+import ru.practicum.main.model.enums.EventState;
 
 import java.util.Collection;
 import java.util.List;
@@ -27,4 +28,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     @Query(value = "SELECT id, title FROM events WHERE id IN (:ids)", nativeQuery = true)
     List<Object[]> findShortInfoByIds(@Param("ids") Collection<Long> ids);
+
+    boolean existsByIdAndState(Long id, EventState state);
 }

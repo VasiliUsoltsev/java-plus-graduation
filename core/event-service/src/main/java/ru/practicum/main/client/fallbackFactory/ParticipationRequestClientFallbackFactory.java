@@ -66,6 +66,12 @@ public class ParticipationRequestClientFallbackFactory implements FallbackFactor
                 throw new RequestServiceUnavailableException(eventId, cause);
             }
 
+            @Override
+            public boolean isUserRegisteredForEvent(Long userId, Long eventId) {
+                log.warn("request-service недоступен: confirmRequestsAtomically(eventId={})", eventId, cause);
+                throw new RequestServiceUnavailableException(eventId, cause);
+            }
+
             private boolean isNotFound(Throwable cause) {
                 return cause instanceof feign.FeignException.NotFound;
             }

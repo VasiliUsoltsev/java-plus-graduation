@@ -56,4 +56,11 @@ public class UserInternalController {
     ) {
         return requestService.confirmRequestsAtomically(ids, eventId, limit);
     }
+
+    @GetMapping("/checkregistered")
+    public boolean isUserRegisteredForEvent(@RequestParam @Positive Long userId,
+                                            @RequestParam @Positive Long eventId
+    ) {
+        return requestService.isUserRegisteredForEvent(userId, eventId);
+    }
 }

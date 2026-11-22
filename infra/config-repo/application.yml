@@ -1,14 +1,17 @@
 spring:
   main:
     banner-mode: off
-    log-startup-info: false
+    log-startup-info: true
+
 
 logging:
   level:
-    ru.yandex.practicum: DEBUG
-    org:
-      springframework: ERROR
-      apache.kafka: WARN
+    root: INFO
+    ru.practicum: DEBUG
+    net.devh: DEBUG
+    org.springframework.boot: INFO
+    org.springframework.cloud.config: DEBUG
+    org.apache.kafka: WARN
 
 eureka:
   client:
@@ -21,3 +24,6 @@ eureka:
     prefer-ip-address: true
     lease-renewal-interval-in-seconds: 5
     lease-expiration-duration-in-seconds: 15
+
+kafka:
+  bootstrap-servers: "localhost:9092"

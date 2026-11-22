@@ -1,4 +1,4 @@
-CREATE DATABASE "ewm-stats";
+CREATE DATABASE "ewm-analyzer";
 CREATE DATABASE "ewm-event";
 CREATE DATABASE "ewm-comment";
 CREATE DATABASE "ewm-request";

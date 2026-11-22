@@ -1,0 +1,28 @@
+spring:
+  main:
+    web-application-type: none
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ewm-analyzer
+    username: ewm
+    password: ewm
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  sql:
+    init:
+      mode: always
+
+kafka:
+  group: aggregator-service
+  key-serializer: "org.apache.kafka.common.serialization.StringSerializer"
+  value-serializer: "ru.practicum.main.serialization.GeneralAvroSerializer"
+  key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  value-deserializer: ru.practicum.main.serialization.deserializer.UserActionAvroDeserializer
+  statsUserTopic: "stats.user-actions.v1"
+  similarityTopic: "stats.events-similarity.v1"
+  maxPoll: 100
+
+grpc:
+  server:
+    port: 0
