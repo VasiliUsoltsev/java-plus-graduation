@@ -21,7 +21,7 @@ public final class CollectorMapper {
         };
 
         Instant instant = Instant.ofEpochSecond(
-               userActionProto.getTimestamp().getSeconds(),
+                userActionProto.getTimestamp().getSeconds(),
                 userActionProto.getTimestamp().getNanos()
         );
         long timestampMs = instant.toEpochMilli();

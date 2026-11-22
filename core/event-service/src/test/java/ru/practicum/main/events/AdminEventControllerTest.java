@@ -71,7 +71,6 @@ class AdminEventControllerTest {
                 .requestModeration(true)
                 .category(CategoryDto.builder().id(1L).name("Концерты").build())
                 .confirmedRequests(0L)
-                .views(0L)
                 .build();
 
         when(eventService.searchEventsAdmin(any(AdminEventSearchParams.class)))
@@ -146,7 +145,6 @@ class AdminEventControllerTest {
                 .requestModeration(true)
                 .category(CategoryDto.builder().id(1L).name("Концерты").build())
                 .confirmedRequests(0L)
-                .views(0L)
                 .build();
 
         when(eventService.updateEventAdmin(eq(1L), any(UpdateEventAdminRequest.class)))

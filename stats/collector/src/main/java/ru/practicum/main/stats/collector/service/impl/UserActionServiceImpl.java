@@ -22,7 +22,7 @@ import java.util.concurrent.TimeoutException;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserActionServiceImpl implements UserActionService,AutoCloseable {
+public class UserActionServiceImpl implements UserActionService, AutoCloseable {
     private static final long SEND_TIMEOUT_SECONDS = 10L;
 
     private final KafkaProducer<String, SpecificRecordBase> producer;

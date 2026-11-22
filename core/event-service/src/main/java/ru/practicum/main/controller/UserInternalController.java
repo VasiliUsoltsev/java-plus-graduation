@@ -31,7 +31,7 @@ public class UserInternalController {
     }
 
     @GetMapping("/eventsbatch")
-    public List<Object[]> getEventTitleBatch(@RequestParam List<Long> eventIds){
+    public List<Object[]> getEventTitleBatch(@RequestParam List<Long> eventIds) {
         return eventService.getEventTitleBatch(eventIds);
     }
 }

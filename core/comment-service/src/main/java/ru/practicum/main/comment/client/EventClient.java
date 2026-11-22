@@ -18,5 +18,5 @@ public interface EventClient {
     Boolean existsById(@PathVariable @Positive Long eventId);
 
     @GetMapping("/internal/eventsbatch")
-    List<Object[]>getEventTitleBatch(@RequestParam List<Long> eventIds);
+    List<Object[]> getEventTitleBatch(@RequestParam List<Long> eventIds);
 }

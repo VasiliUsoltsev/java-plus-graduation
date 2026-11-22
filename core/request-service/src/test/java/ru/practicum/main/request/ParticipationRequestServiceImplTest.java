@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.practicum.ewm.stats.grpc.ActionTypeProto;
 import ru.practicum.main.request.client.EventClient;
 import ru.practicum.main.request.client.UserClient;
 import ru.practicum.main.request.dto.client.EventDto;
@@ -21,6 +22,7 @@ import ru.practicum.main.request.model.ParticipationRequest;
 import ru.practicum.main.request.model.enums.ParticipationStatus;
 import ru.practicum.main.request.repository.ParticipationRequestRepository;
 import ru.practicum.main.request.service.impl.ParticipationRequestServiceImpl;
+import ru.practicum.stat.client.StatsClientCollector;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,8 +30,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,6 +44,9 @@ class ParticipationRequestServiceImplTest {
 
     @Mock
     private UserClient userClient;
+
+    @Mock
+    private StatsClientCollector statsClientCollector;
 
     @InjectMocks
     private ParticipationRequestServiceImpl requestService;
@@ -131,6 +135,7 @@ class ParticipationRequestServiceImplTest {
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getStatus()).isEqualTo(ParticipationStatus.PENDING);
         verify(requestRepository).save(any(ParticipationRequest.class));
+        verify(statsClientCollector).send(eq(2L), eq(10L), eq(ActionTypeProto.ACTION_REGISTER));
     }
 
     @Test
@@ -149,6 +154,7 @@ class ParticipationRequestServiceImplTest {
         ParticipationRequestDto result = requestService.createRequest(2L, 10L);
 
         assertThat(result.getStatus()).isEqualTo(ParticipationStatus.CONFIRMED);
+        verify(statsClientCollector).send(eq(2L), eq(10L), eq(ActionTypeProto.ACTION_REGISTER));
     }
 
     @Test

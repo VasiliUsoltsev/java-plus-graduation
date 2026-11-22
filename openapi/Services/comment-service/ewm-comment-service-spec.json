@@ -26,7 +26,9 @@
   "paths": {
     "/internal/countEvent/{eventId}": {
       "get": {
-        "tags": ["CommentInternalController"],
+        "tags": [
+          "CommentInternalController"
+        ],
         "summary": "Подсчёт комментариев по событию",
         "description": "Возвращает количество комментариев для заданного события. Используется Feign-клиентом EventCommentClient (event-service).",
         "operationId": "countEvent",
@@ -64,7 +66,9 @@
     },
     "/internal/countEvents": {
       "get": {
-        "tags": ["CommentInternalController"],
+        "tags": [
+          "CommentInternalController"
+        ],
         "summary": "Подсчёт комментариев по списку событий",
         "description": "Возвращает количество комментариев для каждого из переданных событий. Используется Feign-клиентом EventCommentClient (event-service).",
         "operationId": "countEvents",
@@ -81,7 +85,11 @@
                 "format": "int64"
               }
             },
-            "example": [1, 2, 3]
+            "example": [
+              1,
+              2,
+              3
+            ]
           }
         ],
         "responses": {
@@ -100,7 +108,16 @@
                     "minItems": 2,
                     "maxItems": 2
                   },
-                  "example": [[1, 5], [2, 3]]
+                  "example": [
+                    [
+                      1,
+                      5
+                    ],
+                    [
+                      2,
+                      3
+                    ]
+                  ]
                 }
               }
             }
