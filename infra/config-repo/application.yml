@@ -8,7 +8,7 @@ logging:
   level:
     root: INFO
     ru.practicum: DEBUG
-    net.devh: DEBUG
+    net.devh: INFO
     org.springframework.boot: INFO
     org.springframework.cloud.config: INFO
     org.apache.kafka: WARN

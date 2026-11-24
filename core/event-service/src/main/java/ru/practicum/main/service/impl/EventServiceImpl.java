@@ -508,6 +508,10 @@ public class EventServiceImpl implements EventService {
     private Double getRating(Long eventId) {
         List<RecommendedEventProto> list = statsClientAnalyzer.getInteractionsCount(List.of(eventId));
 
+        if (list.isEmpty()) {
+            return 0.0;
+        }
+
         return list.get(0).getScore();
     }
 

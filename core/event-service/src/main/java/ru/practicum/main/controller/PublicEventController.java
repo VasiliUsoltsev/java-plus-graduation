@@ -26,11 +26,11 @@ public class PublicEventController {
         return eventService.searchPublicEvents(params);
     }
 
-    @GetMapping("/{eventId}")
+    @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public EventFullDto getEvent(@PathVariable Long eventId,
+    public EventFullDto getEvent(@PathVariable Long id,
                                  @RequestHeader("X-EWM-USER-ID") Long userId) {
-        return eventService.getPublishedEventById(eventId, userId);
+        return eventService.getPublishedEventById(id, userId);
     }
 
     @GetMapping("/{eventId}/similarevents")
