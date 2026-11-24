@@ -9,7 +9,6 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.stereotype.Component;
@@ -23,10 +22,6 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 @Slf4j
 @Component
@@ -34,7 +29,6 @@ import java.util.concurrent.TimeoutException;
 public class AggregationStarter {
 
     private static final Duration CONSUME_ATTEMPT_TIMEOUT = Duration.ofMillis(1000);
-    private static final long SEND_TIMEOUT_SECONDS = 10L;
 
     private final Map<TopicPartition, OffsetAndMetadata> currentOffsets = new HashMap<>();
 
@@ -84,9 +78,15 @@ public class AggregationStarter {
         Long triggerEventId = record.value().getEventId();
 
         List<EventSimilarityAvro> similarities = similarityService.processUserAction(record.value());
+        if (similarities.isEmpty()) {
+            return;
+        }
+
         for (EventSimilarityAvro similarity : similarities) {
             sendSimilarity(similarity, triggerEventId);
         }
+
+        producer.flush();
     }
 
     private void sendSimilarity(EventSimilarityAvro similarity, Long eventId) {
@@ -98,28 +98,16 @@ public class AggregationStarter {
                 similarity
         );
 
-        try {
-            Future<RecordMetadata> send = producer.send(output);
-            RecordMetadata metadata = send.get(SEND_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
+        producer.send(output, (metadata, exception) -> {
+            if (exception != null) {
+                log.error("Ошибка отправки сходства A={}, B={}",
+                        similarity.getEventA(), similarity.getEventB(), exception);
+                throw new KafkaSendException("Не удалось отправить сходство", exception);
+            }
             log.debug("Сходство отправлено: A={}, B={}, score={}, partition={}, offset={}",
                     similarity.getEventA(), similarity.getEventB(), similarity.getScore(),
                     metadata.partition(), metadata.offset());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("Прервана отправка сходства A={}, B={}",
-                    similarity.getEventA(), similarity.getEventB(), e);
-            throw new KafkaSendException("Прервана отправка сходства", e);
-        } catch (TimeoutException e) {
-            log.error("Таймаут отправки сходства A={}, B={}",
-                    similarity.getEventA(), similarity.getEventB(), e);
-            throw new KafkaSendException("Kafka не ответила вовремя", e);
-        } catch (ExecutionException e) {
-            Throwable cause = e.getCause() != null ? e.getCause() : e;
-            log.error("Ошибка отправки сходства A={}, B={}",
-                    similarity.getEventA(), similarity.getEventB(), cause);
-            throw new KafkaSendException("Не удалось отправить сходство", cause);
-        }
+        });
     }
 
     private void manageOffsets(ConsumerRecord<Long, UserActionAvro> record,
