@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.stats.grpc.ActionTypeProto;
+import ru.practicum.ewm.stats.grpc.RecommendedEventProto;
 import ru.practicum.main.client.EventCommentClient;
 import ru.practicum.main.client.ParticipationRequestClient;
 import ru.practicum.main.client.UserClient;
@@ -30,6 +31,7 @@ import ru.practicum.main.repository.EventRepository;
 import ru.practicum.main.repository.EventSearchRepository;
 import ru.practicum.main.service.EventService;
 import ru.practicum.main.service.mapper.EventMapper;
+import ru.practicum.stat.client.StatsClientAnalyzer;
 import ru.practicum.stat.client.StatsClientCollector;
 
 import java.time.LocalDateTime;
@@ -69,6 +71,7 @@ public class EventServiceImpl implements EventService {
     private final UserClient userClient;
     private final CategoryRepository categoryRepository;
     private final StatsClientCollector statsClientCollector;
+    private final StatsClientAnalyzer statsClientAnalyzer;
     private final EventCommentClient eventCommentClient;
 
     @Override
@@ -82,11 +85,13 @@ public class EventServiceImpl implements EventService {
 
         Map<Long, Long> confirmedMap = getConfirmedRequestsBatch(eventIds);
         Map<Long, Long> countEventCommentsMap = countCommentsByEventId(eventIds);
+        Map<Long, Double> ratingMap = getRatingBatch(eventIds);
         Map<Long, UserShortDto> initiatorBatch = getInitiatorBatch(initiatorIds);
 
         return events.stream()
                 .map(event -> EventMapper.toShortDto(event,
                                 confirmedMap.getOrDefault(event.getId(), 0L),
+                                ratingMap.getOrDefault(event.getId(), 0.0),
                                 countEventCommentsMap.getOrDefault(event.getId(), 0L),
                                 initiatorBatch.get(event.getInitiator())
                         )
@@ -113,6 +118,7 @@ public class EventServiceImpl implements EventService {
         return EventMapper.toFullDto(
                 event,
                 0L,
+                0.0,
                 0L,
                 getInitiator(event.getInitiator())
         );
@@ -124,6 +130,7 @@ public class EventServiceImpl implements EventService {
         return EventMapper.toFullDto(
                 event,
                 getConfirmedRequests(eventId),
+                getRating(eventId),
                 countCommentByEventId(eventId),
                 getInitiator(event.getInitiator())
         );
@@ -163,6 +170,7 @@ public class EventServiceImpl implements EventService {
         return EventMapper.toFullDto(
                 event,
                 getConfirmedRequests(eventId),
+                getRating(eventId),
                 countCommentByEventId(eventId),
                 getInitiator(event.getInitiator())
         );
@@ -257,11 +265,13 @@ public class EventServiceImpl implements EventService {
 
         Map<Long, Long> confirmedMap = getConfirmedRequestsBatch(eventIds);
         Map<Long, Long> countEventCommentsMap = countCommentsByEventId(eventIds);
+        Map<Long, Double> ratingMap = getRatingBatch(eventIds);
         Map<Long, UserShortDto> initiatorBatch = getInitiatorBatch(initiatorIds);
 
         return events.stream()
                 .map(event -> EventMapper.toFullDto(event,
                         confirmedMap.getOrDefault(event.getId(), 0L),
+                        ratingMap.getOrDefault(event.getId(), 0.0),
                         countEventCommentsMap.getOrDefault(event.getId(), 0L),
                         initiatorBatch.get(event.getInitiator())))
                 .toList();
@@ -307,6 +317,7 @@ public class EventServiceImpl implements EventService {
         return EventMapper.toFullDto(
                 event,
                 getConfirmedRequests(eventId),
+                getRating(eventId),
                 countCommentByEventId(eventId),
                 getInitiator(event.getInitiator())
         );
@@ -332,11 +343,13 @@ public class EventServiceImpl implements EventService {
 
         Map<Long, Long> confirmedMap = getConfirmedRequestsBatch(eventIds);
         Map<Long, Long> countEventCommentsMap = countCommentsByEventId(eventIds);
+        Map<Long, Double> ratingMap = getRatingBatch(eventIds);
         Map<Long, UserShortDto> initiatorBatch = getInitiatorBatch(initiatorIds);
 
         List<EventShortDto> result = events.stream()
                 .map(event -> EventMapper.toShortDto(event,
                         confirmedMap.getOrDefault(event.getId(), 0L),
+                        ratingMap.getOrDefault(event.getId(), 0.0),
                         countEventCommentsMap.getOrDefault(event.getId(), 0L),
                         initiatorBatch.get(event.getInitiator())))
                 .toList();
@@ -358,6 +371,7 @@ public class EventServiceImpl implements EventService {
         return EventMapper.toFullDto(
                 event,
                 getConfirmedRequests(eventId),
+                getRating(eventId),
                 countCommentByEventId(eventId),
                 getInitiator(event.getInitiator())
         );
@@ -376,6 +390,7 @@ public class EventServiceImpl implements EventService {
         EventFullDto result = EventMapper.toFullDto(
                 event,
                 getConfirmedRequests(eventId),
+                getRating(eventId),
                 countCommentByEventId(eventId),
                 getInitiator(event.getInitiator())
         );
@@ -389,9 +404,63 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventFullDto> getRecommendations(Long userId, Integer maxResults) {
-        // ОЖИДАЕТ РЕАЛИЗАЦИИ
-        return List.of();
+    public List<EventShortDto> getRecommendations(Long userId, Integer maxResults) {
+        List<RecommendedEventProto> recommendList = statsClientAnalyzer.getRecommendationsForUser(userId, maxResults);
+
+        List<Long> eventIds = recommendList.stream().map(RecommendedEventProto::getEventId).toList();
+        List<Event> events = eventRepository.findAllById(eventIds);
+        List<Long> initiatorIds = events.stream().map(Event::getInitiator).toList();
+
+        Map<Long, Long> confirmedMap = getConfirmedRequestsBatch(eventIds);
+        Map<Long, Long> countEventCommentsMap = countCommentsByEventId(eventIds);
+
+        Map<Long, Double> ratingMap = recommendList.stream()
+                .collect(Collectors.toMap(
+                        RecommendedEventProto::getEventId,
+                        RecommendedEventProto::getScore
+                ));
+
+        Map<Long, UserShortDto> initiatorBatch = getInitiatorBatch(initiatorIds);
+
+        return events.stream()
+                .map(event -> EventMapper.toShortDto(event,
+                                confirmedMap.getOrDefault(event.getId(), 0L),
+                                ratingMap.getOrDefault(event.getId(), 0.0),
+                                countEventCommentsMap.getOrDefault(event.getId(), 0L),
+                                initiatorBatch.get(event.getInitiator())
+                        )
+                )
+                .toList();
+    }
+
+    @Override
+    public List<EventShortDto> getSimilarEvents(Long eventId, Long userId, Integer maxResults) {
+        List<RecommendedEventProto> recommendList = statsClientAnalyzer.getSimilarEvents(eventId, userId, maxResults);
+
+        List<Long> eventIds = recommendList.stream().map(RecommendedEventProto::getEventId).toList();
+        List<Event> events = eventRepository.findAllById(eventIds);
+        List<Long> initiatorIds = events.stream().map(Event::getInitiator).toList();
+
+        Map<Long, Long> confirmedMap = getConfirmedRequestsBatch(eventIds);
+        Map<Long, Long> countEventCommentsMap = countCommentsByEventId(eventIds);
+
+        Map<Long, Double> ratingMap = recommendList.stream()
+                .collect(Collectors.toMap(
+                        RecommendedEventProto::getEventId,
+                        RecommendedEventProto::getScore
+                ));
+
+        Map<Long, UserShortDto> initiatorBatch = getInitiatorBatch(initiatorIds);
+
+        return events.stream()
+                .map(event -> EventMapper.toShortDto(event,
+                                confirmedMap.getOrDefault(event.getId(), 0L),
+                                ratingMap.getOrDefault(event.getId(), 0.0),
+                                countEventCommentsMap.getOrDefault(event.getId(), 0L),
+                                initiatorBatch.get(event.getInitiator())
+                        )
+                )
+                .toList();
     }
 
     @Override
@@ -434,6 +503,28 @@ public class EventServiceImpl implements EventService {
                         row -> ((Number) row[0]).longValue(),
                         row -> ((Number) row[1]).longValue()
                 ));
+    }
+
+    private Double getRating(Long eventId) {
+        List<RecommendedEventProto> list = statsClientAnalyzer.getInteractionsCount(List.of(eventId));
+
+        return list.get(0).getScore();
+    }
+
+    private Map<Long, Double> getRatingBatch(List<Long> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return Map.of();
+        }
+
+        List<RecommendedEventProto> list = statsClientAnalyzer.getInteractionsCount(eventIds);
+
+        Map<Long, Double> resultMap = list.stream()
+                .collect(Collectors.toMap(
+                        RecommendedEventProto::getEventId,
+                        RecommendedEventProto::getScore
+                ));
+
+        return resultMap;
     }
 
     private Long countCommentByEventId(Long eventId) {

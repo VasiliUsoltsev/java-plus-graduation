@@ -2,7 +2,9 @@ package ru.practicum.main.stats.aggregator.state;
 
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -26,15 +28,8 @@ public class SimilarityStateManager {
                 .put(userId, weight);
     }
 
-    public Map<Long, Double> getUserInteractions(long userId) {
-        Map<Long, Double> result = new ConcurrentHashMap<>();
-        for (Map.Entry<Long, Map<Long, Double>> entry : userWeightsByEvent.entrySet()) {
-            Double weight = entry.getValue().get(userId);
-            if (weight != null) {
-                result.put(entry.getKey(), weight);
-            }
-        }
-        return result;
+    public Set<Long> getAllEventIds() {
+        return new HashSet<>(totalEventWeights.keySet());
     }
 
     public void addTotalEventWeight(long eventId, double delta) {

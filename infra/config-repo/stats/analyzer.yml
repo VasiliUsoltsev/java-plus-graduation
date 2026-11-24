@@ -14,13 +14,16 @@ spring:
       mode: always
 
 kafka:
-  group: aggregator-service
-  key-serializer: "org.apache.kafka.common.serialization.StringSerializer"
-  value-serializer: "ru.practicum.main.serialization.GeneralAvroSerializer"
-  key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-  value-deserializer: ru.practicum.main.serialization.deserializer.UserActionAvroDeserializer
-  statsUserTopic: "stats.user-actions.v1"
-  similarityTopic: "stats.events-similarity.v1"
+  topic-user-action: "stats.user-actions.v1"
+  group-user-action: "nalyzer-user-action-group"
+  key-deserializer-user-action: "org.apache.kafka.common.serialization.LongDeserializer"
+  value-deserializer-user-action: "ru.practicum.main.serialization.deserializer.UserActionAvroDeserializer"
+
+  topic-event-similarity: "stats.events-similarity.v1"
+  group-event-similarity: "nalyzer-event-similarity-group"
+  key-deserializer-event-similarity: "org.apache.kafka.common.serialization.LongDeserializer"
+  value-deserializer-event-similarity: "ru.practicum.main.serialization.deserializer.EventSimilarityDeserializer"
+
   maxPoll: 100
 
 grpc:

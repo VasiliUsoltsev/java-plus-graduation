@@ -21,6 +21,7 @@ public class CompilationMapper {
                 .map(event -> EventMapper.toShortDto(
                                 event,
                                 0L,
+                                0.0,
                                 0L,
                                 userMap.get(event.getInitiator())
                         )

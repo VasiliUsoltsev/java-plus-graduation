@@ -12,7 +12,6 @@ import ru.practicum.main.stats.aggregator.state.SimilarityStateManager;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service
@@ -22,6 +21,7 @@ public class SimilarityServiceImpl implements SimilarityService {
     private static final double WEIGHT_VIEW = 0.4;
     private static final double WEIGHT_REGISTER = 0.8;
     private static final double WEIGHT_LIKE = 1.0;
+    private static final double EPSILON = 1e-9;
 
     private final SimilarityStateManager state;
 
@@ -40,21 +40,28 @@ public class SimilarityServiceImpl implements SimilarityService {
 
         log.info("Обновление веса: user={}, event={}, old={}, new={}", userId, eventId, oldWeight, newWeight);
 
+        double oldTotalWeightA = state.getTotalEventWeight(eventId);
+
         state.putUserWeight(userId, eventId, newWeight);
         state.addTotalEventWeight(eventId, newWeight - oldWeight);
 
-        double totalWeightA = state.getTotalEventWeight(eventId);
+        double newTotalWeightA = state.getTotalEventWeight(eventId);
         long timestampMs = action.getTimestamp().toEpochMilli();
 
         List<EventSimilarityAvro> result = new ArrayList<>();
 
-        for (Map.Entry<Long, Double> entry : state.getUserInteractions(userId).entrySet()) {
-            long otherEventId = entry.getKey();
+        for (Long otherEventId : state.getAllEventIds()) {
             if (otherEventId == eventId) {
                 continue;
             }
 
-            double otherWeight = entry.getValue();
+            double otherWeight = state.getUserWeight(userId, otherEventId);
+            if (otherWeight <= 0) {
+                // Пользователь не взаимодействовал с otherEventId.
+                // S_min для пары не меняется, тестер такие пары не ждёт.
+                continue;
+            }
+
             double oldMin = Math.min(oldWeight, otherWeight);
             double newMin = Math.min(newWeight, otherWeight);
             double deltaMin = newMin - oldMin;
@@ -62,22 +69,30 @@ public class SimilarityServiceImpl implements SimilarityService {
             long first = Math.min(eventId, otherEventId);
             long second = Math.max(eventId, otherEventId);
 
-            if (deltaMin != 0) {
+            double oldSMin = state.getMinWeight(first, second);
+            if (Math.abs(deltaMin) > EPSILON) {
                 state.addMinWeight(first, second, deltaMin);
             }
+            double newSMin = state.getMinWeight(first, second);
 
             double totalWeightB = state.getTotalEventWeight(otherEventId);
-            if (totalWeightA <= 0 || totalWeightB <= 0) {
+            if (newTotalWeightA <= 0 || totalWeightB <= 0) {
                 continue;
             }
 
-            double sMin = state.getMinWeight(first, second);
-            double similarity = sMin / (Math.sqrt(totalWeightA) * Math.sqrt(totalWeightB));
+            double oldScore = oldTotalWeightA > 0
+                    ? oldSMin / (Math.sqrt(oldTotalWeightA) * Math.sqrt(totalWeightB))
+                    : 0.0;
+            double newScore = newSMin / (Math.sqrt(newTotalWeightA) * Math.sqrt(totalWeightB));
+
+            if (Math.abs(newScore - oldScore) < EPSILON) {
+                continue;
+            }
 
             result.add(EventSimilarityAvro.newBuilder()
                     .setEventA(first)
                     .setEventB(second)
-                    .setScore(similarity)
+                    .setScore(newScore)
                     .setTimestamp(Instant.ofEpochMilli(timestampMs))
                     .build());
         }

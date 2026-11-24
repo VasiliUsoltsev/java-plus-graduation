@@ -38,8 +38,8 @@ public class AggregationStarter {
 
     private final Map<TopicPartition, OffsetAndMetadata> currentOffsets = new HashMap<>();
 
-    private final KafkaConsumer<String, UserActionAvro> consumer;
-    private final KafkaProducer<String, SpecificRecordBase> producer;
+    private final KafkaConsumer<Long, UserActionAvro> consumer;
+    private final KafkaProducer<Long, SpecificRecordBase> producer;
     private final SimilarityService similarityService;
     private final AggregatorKafkaProperties properties;
 
@@ -51,16 +51,14 @@ public class AggregationStarter {
             consumer.subscribe(List.of(properties.getStatsUserTopic()));
 
             while (true) {
-                ConsumerRecords<String, UserActionAvro> records = consumer.poll(CONSUME_ATTEMPT_TIMEOUT);
+                ConsumerRecords<Long, UserActionAvro> records = consumer.poll(CONSUME_ATTEMPT_TIMEOUT);
 
                 int count = 0;
-                for (ConsumerRecord<String, UserActionAvro> record : records) {
+                for (ConsumerRecord<Long, UserActionAvro> record : records) {
                     handleRecord(record);
                     manageOffsets(record, count, consumer);
                     count++;
                 }
-
-                consumer.commitAsync();
             }
         } catch (WakeupException ignored) {
             log.info("Получен сигнал завершения, останавливаем Aggregator");
@@ -79,28 +77,29 @@ public class AggregationStarter {
         }
     }
 
-    private void handleRecord(ConsumerRecord<String, UserActionAvro> record) {
+    private void handleRecord(ConsumerRecord<Long, UserActionAvro> record) {
         log.debug("topic={}, partition={}, offset={}, value={}",
                 record.topic(), record.partition(), record.offset(), record.value());
 
+        Long triggerEventId = record.value().getEventId();
+
         List<EventSimilarityAvro> similarities = similarityService.processUserAction(record.value());
         for (EventSimilarityAvro similarity : similarities) {
-            sendSimilarity(similarity);
+            sendSimilarity(similarity, triggerEventId);
         }
     }
 
-    private void sendSimilarity(EventSimilarityAvro similarity) {
-        ProducerRecord<String, SpecificRecordBase> output = new ProducerRecord<>(
+    private void sendSimilarity(EventSimilarityAvro similarity, Long eventId) {
+        ProducerRecord<Long, SpecificRecordBase> output = new ProducerRecord<>(
                 properties.getSimilarityTopic(),
                 null,
                 similarity.getTimestamp().toEpochMilli(),
-                similarity.getEventA() + "_" + similarity.getEventB(),
+                eventId,
                 similarity
         );
 
         try {
             Future<RecordMetadata> send = producer.send(output);
-            producer.flush();
             RecordMetadata metadata = send.get(SEND_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
             log.debug("Сходство отправлено: A={}, B={}, score={}, partition={}, offset={}",
@@ -123,9 +122,9 @@ public class AggregationStarter {
         }
     }
 
-    private void manageOffsets(ConsumerRecord<String, UserActionAvro> record,
+    private void manageOffsets(ConsumerRecord<Long, UserActionAvro> record,
                                int count,
-                               KafkaConsumer<String, UserActionAvro> consumer) {
+                               KafkaConsumer<Long, UserActionAvro> consumer) {
         currentOffsets.put(
                 new TopicPartition(record.topic(), record.partition()),
                 new OffsetAndMetadata(record.offset() + 1)

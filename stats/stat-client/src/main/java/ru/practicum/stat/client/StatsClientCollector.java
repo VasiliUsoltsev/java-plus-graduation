@@ -15,7 +15,7 @@ import java.time.Instant;
 @Component
 @RequiredArgsConstructor
 public class StatsClientCollector {
-    @GrpcClient("collector-service")
+    @GrpcClient("collector")
     private UserActionControllerGrpc.UserActionControllerBlockingStub collectorStub;
 
     public void send(Long userId, Long eventId, ActionTypeProto actionType) {

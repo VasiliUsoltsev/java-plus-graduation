@@ -37,7 +37,9 @@ public interface EventService {
 
     List<Object[]> getEventTitleBatch(List<Long> eventIds);
 
-    List<EventFullDto> getRecommendations(Long userId, Integer maxResults);
+    List<EventShortDto> getRecommendations(Long userId, Integer maxResults);
+
+    List<EventShortDto> getSimilarEvents(Long eventId, Long userId, Integer maxResults);
 
     void addLikeEvent(Long eventId, Long userId);
 }

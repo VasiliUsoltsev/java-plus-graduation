@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.ewm.stats.grpc.ActionTypeProto;
+import ru.practicum.ewm.stats.grpc.RecommendedEventProto;
 import ru.practicum.main.client.EventCommentClient;
 import ru.practicum.main.client.ParticipationRequestClient;
 import ru.practicum.main.client.UserClient;
@@ -34,6 +35,7 @@ import ru.practicum.main.repository.CategoryRepository;
 import ru.practicum.main.repository.EventRepository;
 import ru.practicum.main.repository.EventSearchRepository;
 import ru.practicum.main.service.impl.EventServiceImpl;
+import ru.practicum.stat.client.StatsClientAnalyzer;
 import ru.practicum.stat.client.StatsClientCollector;
 
 import java.time.LocalDateTime;
@@ -66,6 +68,9 @@ class EventServiceImplTest {
 
     @Mock
     private StatsClientCollector statsClientCollector;
+
+    @Mock
+    private StatsClientAnalyzer statsClientAnalyzer;
 
     @Mock
     private EventCommentClient eventCommentClient;
@@ -115,6 +120,13 @@ class EventServiceImplTest {
                 .initiator(1L)
                 .category(category)
                 .build();
+    }
+
+    private List<RecommendedEventProto> zeroRating(long eventId) {
+        return List.of(RecommendedEventProto.newBuilder()
+                .setEventId(eventId)
+                .setScore(0.0)
+                .build());
     }
 
     @Test
@@ -214,6 +226,7 @@ class EventServiceImplTest {
         when(eventCommentClient.countByEventIds(anyList()))
                 .thenReturn(List.<Object[]>of(new Object[]{1L, 0L}));
         when(userClient.findShortByIds(anyList())).thenReturn(List.of(userShortDto));
+        when(statsClientAnalyzer.getInteractionsCount(anyList())).thenReturn(List.of());
 
         List<EventShortDto> result = eventService.getUserEvents(1L, 0, 10);
 
@@ -238,6 +251,7 @@ class EventServiceImplTest {
         when(participationRequestClient.countByEventAndStatus(1L, ParticipationStatus.CONFIRMED)).thenReturn(0L);
         when(eventCommentClient.countByEventId(1L)).thenReturn(0L);
         when(userClient.findShortById(1L)).thenReturn(userShortDto);
+        when(statsClientAnalyzer.getInteractionsCount(List.of(1L))).thenReturn(zeroRating(1L));
 
         EventFullDto result = eventService.getUserEvent(1L, 1L);
 
@@ -276,6 +290,7 @@ class EventServiceImplTest {
         when(participationRequestClient.countByEventAndStatus(1L, ParticipationStatus.CONFIRMED)).thenReturn(0L);
         when(eventCommentClient.countByEventId(1L)).thenReturn(0L);
         when(userClient.findShortById(1L)).thenReturn(userShortDto);
+        when(statsClientAnalyzer.getInteractionsCount(List.of(1L))).thenReturn(zeroRating(1L));
 
         EventFullDto result = eventService.updateUserEvent(1L, 1L, update);
 
@@ -297,6 +312,7 @@ class EventServiceImplTest {
         when(participationRequestClient.countByEventAndStatus(1L, ParticipationStatus.CONFIRMED)).thenReturn(0L);
         when(eventCommentClient.countByEventId(1L)).thenReturn(0L);
         when(userClient.findShortById(1L)).thenReturn(userShortDto);
+        when(statsClientAnalyzer.getInteractionsCount(List.of(1L))).thenReturn(zeroRating(1L));
 
         EventFullDto result = eventService.updateUserEvent(1L, 1L, update);
 
@@ -314,6 +330,7 @@ class EventServiceImplTest {
         when(participationRequestClient.countByEventAndStatus(1L, ParticipationStatus.CONFIRMED)).thenReturn(0L);
         when(eventCommentClient.countByEventId(1L)).thenReturn(0L);
         when(userClient.findShortById(1L)).thenReturn(userShortDto);
+        when(statsClientAnalyzer.getInteractionsCount(List.of(1L))).thenReturn(zeroRating(1L));
 
         EventFullDto result = eventService.updateUserEvent(1L, 1L, update);
 
@@ -499,6 +516,7 @@ class EventServiceImplTest {
                 .thenReturn(List.<Object[]>of());
         when(eventCommentClient.countByEventIds(anyList())).thenReturn(List.<Object[]>of());
         when(userClient.findShortByIds(anyList())).thenReturn(List.of(userShortDto));
+        when(statsClientAnalyzer.getInteractionsCount(anyList())).thenReturn(List.of());
 
         List<EventFullDto> result = eventService.searchEventsAdmin(params);
 
@@ -537,6 +555,7 @@ class EventServiceImplTest {
         when(participationRequestClient.countByEventAndStatus(1L, ParticipationStatus.CONFIRMED)).thenReturn(0L);
         when(eventCommentClient.countByEventId(1L)).thenReturn(0L);
         when(userClient.findShortById(1L)).thenReturn(userShortDto);
+        when(statsClientAnalyzer.getInteractionsCount(List.of(1L))).thenReturn(zeroRating(1L));
 
         EventFullDto result = eventService.updateEventAdmin(1L, update);
 
@@ -555,6 +574,7 @@ class EventServiceImplTest {
         when(participationRequestClient.countByEventAndStatus(1L, ParticipationStatus.CONFIRMED)).thenReturn(0L);
         when(eventCommentClient.countByEventId(1L)).thenReturn(0L);
         when(userClient.findShortById(1L)).thenReturn(userShortDto);
+        when(statsClientAnalyzer.getInteractionsCount(List.of(1L))).thenReturn(zeroRating(1L));
 
         EventFullDto result = eventService.updateEventAdmin(1L, update);
 
@@ -617,6 +637,7 @@ class EventServiceImplTest {
         when(participationRequestClient.countByEventAndStatus(1L, ParticipationStatus.CONFIRMED)).thenReturn(0L);
         when(eventCommentClient.countByEventId(1L)).thenReturn(0L);
         when(userClient.findShortById(1L)).thenReturn(userShortDto);
+        when(statsClientAnalyzer.getInteractionsCount(List.of(1L))).thenReturn(zeroRating(1L));
 
         EventFullDto result = eventService.updateEventAdmin(1L, update);
 
@@ -634,6 +655,7 @@ class EventServiceImplTest {
         when(participationRequestClient.countByEventAndStatus(1L, ParticipationStatus.CONFIRMED)).thenReturn(0L);
         when(eventCommentClient.countByEventId(1L)).thenReturn(0L);
         when(userClient.findShortById(1L)).thenReturn(userShortDto);
+        when(statsClientAnalyzer.getInteractionsCount(List.of(1L))).thenReturn(zeroRating(1L));
 
         EventFullDto result = eventService.getPublishedEventById(1L, 100L);
 
@@ -679,6 +701,7 @@ class EventServiceImplTest {
                 .thenReturn(List.<Object[]>of());
         when(eventCommentClient.countByEventIds(anyList())).thenReturn(List.<Object[]>of());
         when(userClient.findShortByIds(anyList())).thenReturn(List.of(userShortDto));
+        when(statsClientAnalyzer.getInteractionsCount(anyList())).thenReturn(List.of());
 
         List<EventShortDto> result = eventService.searchPublicEvents(params);
 
@@ -704,6 +727,7 @@ class EventServiceImplTest {
                 .thenReturn(List.<Object[]>of());
         when(eventCommentClient.countByEventIds(anyList())).thenReturn(List.<Object[]>of());
         when(userClient.findShortByIds(anyList())).thenReturn(List.of(userShortDto));
+        when(statsClientAnalyzer.getInteractionsCount(anyList())).thenReturn(List.of());
 
         List<EventShortDto> result = eventService.searchPublicEvents(params);
 

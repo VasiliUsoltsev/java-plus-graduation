@@ -21,7 +21,7 @@ public class AggregatorConfig {
     private final AggregatorKafkaProperties properties;
 
     @Bean(destroyMethod = "close")
-    public KafkaProducer<String, SpecificRecordBase> kafkaProducer() {
+    public KafkaProducer<Long, SpecificRecordBase> kafkaProducer() {
         Map<String, Object> config = new HashMap<>();
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, properties.getBootstrapServers());
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, properties.getKeySerializer());
@@ -31,7 +31,7 @@ public class AggregatorConfig {
     }
 
     @Bean(destroyMethod = "close")
-    public KafkaConsumer<String, UserActionAvro> kafkaConsumer() {
+    public KafkaConsumer<Long, UserActionAvro> kafkaConsumer() {
         Map<String, Object> config = new HashMap<>();
         config.put(ConsumerConfig.CLIENT_ID_CONFIG, "aggregator-consumer");
         config.put(ConsumerConfig.GROUP_ID_CONFIG, properties.getGroup());

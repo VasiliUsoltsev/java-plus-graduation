@@ -26,16 +26,23 @@ public class PublicEventController {
         return eventService.searchPublicEvents(params);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
-    public EventFullDto getEvent(@PathVariable Long id,
+    public EventFullDto getEvent(@PathVariable Long eventId,
                                  @RequestHeader("X-EWM-USER-ID") Long userId) {
-        return eventService.getPublishedEventById(id, userId);
+        return eventService.getPublishedEventById(eventId, userId);
+    }
+
+    @GetMapping("/{eventId}/similarevents")
+    public List<EventShortDto> getSimilarEvents(@PathVariable Long eventId,
+                                                @RequestHeader("X-EWM-USER-ID") Long userId,
+                                                @RequestParam(defaultValue = "10") @Positive Integer maxResults) {
+        return eventService.getSimilarEvents(eventId, userId, maxResults);
     }
 
     @GetMapping("/recommendations")
-    public List<EventFullDto> getRecommendations(@RequestHeader("X-EWM-USER-ID") Long userId,
-                                                 @RequestParam(defaultValue = "10") @Positive Integer maxResults) {
+    public List<EventShortDto> getRecommendations(@RequestHeader("X-EWM-USER-ID") Long userId,
+                                                  @RequestParam(defaultValue = "10") @Positive Integer maxResults) {
         return eventService.getRecommendations(userId, maxResults);
     }
 

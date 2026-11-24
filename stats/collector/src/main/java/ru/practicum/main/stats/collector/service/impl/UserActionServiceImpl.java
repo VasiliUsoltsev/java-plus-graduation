@@ -25,7 +25,7 @@ import java.util.concurrent.TimeoutException;
 public class UserActionServiceImpl implements UserActionService, AutoCloseable {
     private static final long SEND_TIMEOUT_SECONDS = 10L;
 
-    private final KafkaProducer<String, SpecificRecordBase> producer;
+    private final KafkaProducer<Long, SpecificRecordBase> producer;
     private final CollectorKafkaProperties properties;
 
     @Override
@@ -34,7 +34,7 @@ public class UserActionServiceImpl implements UserActionService, AutoCloseable {
 
         send(
                 properties.getStatsUserTopic(),
-                String.valueOf(avro.getEventId()),
+                avro.getEventId(),
                 avro.getTimestamp().toEpochMilli(),
                 avro,
                 avro.getActionType().toString()
@@ -42,12 +42,12 @@ public class UserActionServiceImpl implements UserActionService, AutoCloseable {
     }
 
     private void send(String topic,
-                      String key,
+                      Long key,
                       long timestamp,
                       SpecificRecordBase value,
                       String eventType) {
 
-        ProducerRecord<String, SpecificRecordBase> record = new ProducerRecord<>(
+        ProducerRecord<Long, SpecificRecordBase> record = new ProducerRecord<>(
                 topic,
                 null,
                 timestamp,
