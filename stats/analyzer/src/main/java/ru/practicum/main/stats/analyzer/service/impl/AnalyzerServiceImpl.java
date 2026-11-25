@@ -15,6 +15,7 @@ import ru.practicum.main.stats.analyzer.repository.SimilarityRepository;
 import ru.practicum.main.stats.analyzer.service.AnalyzerService;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -54,6 +55,13 @@ public class AnalyzerServiceImpl implements AnalyzerService {
         // Все мероприятия, с которыми пользователь уже взаимодействовал — исключаем из кандидатов
         Set<Long> interacted = new HashSet<>(interactionRepository.findEventIdsByUserId(userId));
 
+        // Веса пользователя по всем мероприятиям — один запрос вместо findById в цикле
+        Map<Long, Double> userWeights = interactionRepository.findRatingsByUserId(userId).stream()
+                .collect(Collectors.toMap(
+                        row -> ((Number) row[0]).longValue(),
+                        row -> ((Number) row[1]).doubleValue()
+                ));
+
         // Кандидаты - второй участник пары, не просмотренный пользователем.
         //    score кандидата = максимальный коэффициент подобия среди всех пар, через которые он попал.
         Map<Long, Double> candidateScores = new HashMap<>();
@@ -71,13 +79,33 @@ public class AnalyzerServiceImpl implements AnalyzerService {
                 .map(Map.Entry::getKey)
                 .toList();
 
+        if (candidates.isEmpty()) {
+            return List.of();
+        }
+
+        // Соседи для всех кандидатов — один запрос вместо findNeighbors в цикле
+        List<Similarity> allNeighbors = similarityRepository
+                .findNeighborsForCandidates(candidates, new ArrayList<>(interacted));
+
+        Map<Long, List<Similarity>> neighborsByCandidate = new HashMap<>();
+        for (Similarity s : allNeighbors) {
+            if (candidates.contains(s.getEventA())) {
+                neighborsByCandidate.computeIfAbsent(s.getEventA(), k -> new ArrayList<>()).add(s);
+            }
+            if (candidates.contains(s.getEventB())) {
+                neighborsByCandidate.computeIfAbsent(s.getEventB(), k -> new ArrayList<>()).add(s);
+            }
+        }
+
         // Предсказание оценки для каждого кандидата
 
         List<RecommendedEventProto> result = new ArrayList<>();
         for (long candidate : candidates) {
             // K ближайших соседей среди мероприятий пользователя
-            List<Similarity> neighbors = similarityRepository
-                    .findNeighbors(candidate, new ArrayList<>(interacted), PageRequest.of(0, NEIGHBOR_LIMIT));
+            List<Similarity> neighbors = neighborsByCandidate.getOrDefault(candidate, List.of()).stream()
+                    .sorted(Comparator.comparingDouble(Similarity::getScore).reversed())
+                    .limit(NEIGHBOR_LIMIT)
+                    .toList();
             if (neighbors.isEmpty()) {
                 continue;
             }
@@ -86,10 +114,7 @@ public class AnalyzerServiceImpl implements AnalyzerService {
             double simSum = 0.0;
             for (Similarity s : neighbors) {
                 long neighbor = s.getEventA() == candidate ? s.getEventB() : s.getEventA();
-                double weight = interactionRepository
-                        .findById(new Interaction.InteractionId(userId, neighbor))
-                        .map(Interaction::getRating)
-                        .orElse(0.0);
+                double weight = userWeights.getOrDefault(neighbor, 0.0);
                 weightedSum += s.getScore() * weight;
                 simSum += s.getScore();
             }
