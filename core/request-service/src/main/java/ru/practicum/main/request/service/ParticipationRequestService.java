@@ -24,4 +24,6 @@ public interface ParticipationRequestService {
     int rejectRemainingPending(Long eventId, List<Long> excludeIds);
 
     int confirmRequestsAtomically(List<Long> ids, Long eventId, int limit);
+
+    boolean isUserRegisteredForEvent(Long userId, Long eventId);
 }

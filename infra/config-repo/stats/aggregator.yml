@@ -1,0 +1,13 @@
+spring:
+  main:
+    web-application-type: none
+
+kafka:
+  group: aggregator-service
+  key-serializer: "org.apache.kafka.common.serialization.LongSerializer"
+  value-serializer: "ru.practicum.main.serialization.GeneralAvroSerializer"
+  key-deserializer: "org.apache.kafka.common.serialization.LongDeserializer"
+  value-deserializer: "ru.practicum.main.serialization.deserializer.UserActionAvroDeserializer"
+  statsUserTopic: "stats.user-actions.v1"
+  similarityTopic: "stats.events-similarity.v1"
+  maxPoll: 100

@@ -36,8 +36,16 @@ resilience4j:
       default:
         timeout-duration: 3s
 
-stat:
-  app:
-    name: ewm-event-service
-  service:
-    id: stats-server
+grpc:
+  client:
+    analyzer:
+      address: 'discovery:///analyzer'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
+
+    collector:
+      address: 'discovery:///collector'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext

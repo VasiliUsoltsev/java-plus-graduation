@@ -20,7 +20,7 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -35,8 +35,6 @@ class PublicEventControllerTest {
     @MockBean
     private EventService eventService;
 
-    // ==================== ТЕСТЫ ДЛЯ GET /events (поиск) ====================
-
     @Test
     void searchEvents_ShouldReturnEvents_WhenValidParams() throws Exception {
         EventShortDto eventDto = EventShortDto.builder()
@@ -47,10 +45,9 @@ class PublicEventControllerTest {
                 .paid(false)
                 .category(CategoryDto.builder().id(1L).name("Концерты").build())
                 .confirmedRequests(0L)
-                .views(0L)
                 .build();
 
-        when(eventService.searchPublicEvents(any(), anyString()))
+        when(eventService.searchPublicEvents(any()))
                 .thenReturn(Collections.singletonList(eventDto));
 
         mockMvc.perform(get("/events")
@@ -68,7 +65,7 @@ class PublicEventControllerTest {
 
     @Test
     void searchEvents_ShouldReturnEmptyList_WhenNoResults() throws Exception {
-        when(eventService.searchPublicEvents(any(), anyString()))
+        when(eventService.searchPublicEvents(any()))
                 .thenReturn(List.of());
 
         mockMvc.perform(get("/events")
@@ -79,7 +76,7 @@ class PublicEventControllerTest {
 
     @Test
     void searchEvents_ShouldUseDefaultValues_WhenParamsNotProvided() throws Exception {
-        when(eventService.searchPublicEvents(any(), anyString()))
+        when(eventService.searchPublicEvents(any()))
                 .thenReturn(List.of());
 
         mockMvc.perform(get("/events"))
@@ -107,8 +104,6 @@ class PublicEventControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-    // ==================== ТЕСТЫ ДЛЯ GET /events/{id} ====================
-
     @Test
     void getEvent_ShouldReturnEvent_WhenPublished() throws Exception {
         EventFullDto response = EventFullDto.builder()
@@ -125,12 +120,12 @@ class PublicEventControllerTest {
                 .requestModeration(true)
                 .category(CategoryDto.builder().id(1L).name("Концерты").build())
                 .confirmedRequests(0L)
-                .views(0L)
                 .build();
 
-        when(eventService.getPublishedEventById(1L, "127.0.0.1")).thenReturn(response);
+        when(eventService.getPublishedEventById(eq(1L), eq(100L))).thenReturn(response);
 
-        mockMvc.perform(get("/events/1"))
+        mockMvc.perform(get("/events/1")
+                        .header("X-EWM-USER-ID", "100"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.title").value("Test Event"))
@@ -139,10 +134,11 @@ class PublicEventControllerTest {
 
     @Test
     void getEvent_ShouldReturnNotFound_WhenEventNotPublished() throws Exception {
-        when(eventService.getPublishedEventById(1L, "127.0.0.1"))
+        when(eventService.getPublishedEventById(1L, 100L))
                 .thenThrow(new NotFoundException("Event with id=1 was not found"));
 
-        mockMvc.perform(get("/events/1"))
+        mockMvc.perform(get("/events/1")
+                        .header("X-EWM-USER-ID", "100"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("The required object was not found."))
                 .andExpect(jsonPath("$.message").value("Event with id=1 was not found"));
@@ -150,17 +146,19 @@ class PublicEventControllerTest {
 
     @Test
     void getEvent_ShouldReturnNotFound_WhenEventDoesNotExist() throws Exception {
-        when(eventService.getPublishedEventById(999L, "127.0.0.1"))
+        when(eventService.getPublishedEventById(999L, 100L))
                 .thenThrow(new NotFoundException("Event with id=999 was not found"));
 
-        mockMvc.perform(get("/events/999"))
+        mockMvc.perform(get("/events/999")
+                        .header("X-EWM-USER-ID", "100"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Event with id=999 was not found"));
     }
 
     @Test
     void getEvent_ShouldReturnBadRequest_WhenIdIsNotNumber() throws Exception {
-        mockMvc.perform(get("/events/abc"))
+        mockMvc.perform(get("/events/abc")
+                        .header("X-EWM-USER-ID", "100"))
                 .andExpect(status().isBadRequest());
     }
 }

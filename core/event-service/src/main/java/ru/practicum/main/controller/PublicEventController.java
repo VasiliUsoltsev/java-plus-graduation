@@ -1,7 +1,7 @@
 package ru.practicum.main.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -22,14 +22,33 @@ public class PublicEventController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<EventShortDto> searchEvents(@ModelAttribute @Valid PublicEventSearchParams params,
-                                            HttpServletRequest request) {
-        return eventService.searchPublicEvents(params, request.getRemoteAddr());
+    public List<EventShortDto> searchEvents(@ModelAttribute @Valid PublicEventSearchParams params) {
+        return eventService.searchPublicEvents(params);
     }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public EventFullDto getEvent(@PathVariable Long id, HttpServletRequest request) {
-        return eventService.getPublishedEventById(id, request.getRemoteAddr());
+    public EventFullDto getEvent(@PathVariable Long id,
+                                 @RequestHeader("X-EWM-USER-ID") Long userId) {
+        return eventService.getPublishedEventById(id, userId);
+    }
+
+    @GetMapping("/{eventId}/similarevents")
+    public List<EventShortDto> getSimilarEvents(@PathVariable Long eventId,
+                                                @RequestHeader("X-EWM-USER-ID") Long userId,
+                                                @RequestParam(defaultValue = "10") @Positive Integer maxResults) {
+        return eventService.getSimilarEvents(eventId, userId, maxResults);
+    }
+
+    @GetMapping("/recommendations")
+    public List<EventShortDto> getRecommendations(@RequestHeader("X-EWM-USER-ID") Long userId,
+                                                  @RequestParam(defaultValue = "10") @Positive Integer maxResults) {
+        return eventService.getRecommendations(userId, maxResults);
+    }
+
+    @PutMapping("/{eventId}/like")
+    public void likeEvent(@PathVariable Long eventId,
+                          @RequestHeader("X-EWM-USER-ID") Long userId) {
+        eventService.addLikeEvent(eventId, userId);
     }
 }

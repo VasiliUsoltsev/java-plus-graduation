@@ -33,7 +33,7 @@ public final class EventMapper {
     public static EventFullDto toFullDto(
             Event event,
             Long confirmedRequests,
-            Long views,
+            Double rating,
             Long countEventComment,
             UserShortDto initiator) {
         if (event == null) {
@@ -55,7 +55,7 @@ public final class EventMapper {
                 .requestModeration(event.getRequestModeration())
                 .state(event.getState())
                 .title(event.getTitle())
-                .views(views)
+                .rating(rating)
                 .countEventComment(countEventComment)
                 .build();
     }
@@ -63,7 +63,7 @@ public final class EventMapper {
     public static EventShortDto toShortDto(
             Event event,
             Long confirmedRequests,
-            Long views,
+            Double rating,
             Long countEventComment,
             UserShortDto user
     ) {
@@ -79,7 +79,7 @@ public final class EventMapper {
                 .initiator(user)
                 .paid(event.getPaid())
                 .title(event.getTitle())
-                .views(views)
+                .rating(rating)
                 .countEventComment(countEventComment)
                 .build();
     }

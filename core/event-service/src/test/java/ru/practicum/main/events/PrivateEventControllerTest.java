@@ -61,7 +61,6 @@ class PrivateEventControllerTest {
                 .paid(false)
                 .category(CategoryDto.builder().id(1L).name("Концерты").build())
                 .confirmedRequests(0L)
-                .views(0L)
                 .build();
 
         when(eventService.getUserEvents(eq(1L), eq(0), eq(10)))
@@ -129,7 +128,6 @@ class PrivateEventControllerTest {
                 .requestModeration(true)
                 .category(CategoryDto.builder().id(1L).name("Концерты").build())
                 .confirmedRequests(0L)
-                .views(0L)
                 .build();
 
         when(eventService.addEvent(eq(1L), any(NewEventDto.class))).thenReturn(response);
@@ -249,7 +247,6 @@ class PrivateEventControllerTest {
                 .requestModeration(true)
                 .category(CategoryDto.builder().id(1L).name("Концерты").build())
                 .confirmedRequests(0L)
-                .views(0L)
                 .build();
 
         when(eventService.getUserEvent(1L, 1L)).thenReturn(response);
@@ -292,7 +289,6 @@ class PrivateEventControllerTest {
                 .requestModeration(true)
                 .category(CategoryDto.builder().id(1L).name("Концерты").build())
                 .confirmedRequests(0L)
-                .views(0L)
                 .build();
 
         when(eventService.updateUserEvent(eq(1L), eq(1L), any(UpdateEventUserRequest.class)))

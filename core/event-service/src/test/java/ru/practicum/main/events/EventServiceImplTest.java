@@ -9,6 +9,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import ru.practicum.ewm.stats.grpc.ActionTypeProto;
+import ru.practicum.ewm.stats.grpc.RecommendedEventProto;
 import ru.practicum.main.client.EventCommentClient;
 import ru.practicum.main.client.ParticipationRequestClient;
 import ru.practicum.main.client.UserClient;
@@ -17,7 +19,6 @@ import ru.practicum.main.dto.client.ParticipationRequestDto;
 import ru.practicum.main.dto.client.ParticipationStatus;
 import ru.practicum.main.dto.client.UserShortDto;
 import ru.practicum.main.dto.enums.AdminStateAction;
-import ru.practicum.main.dto.enums.EventSort;
 import ru.practicum.main.dto.enums.EventStateAction;
 import ru.practicum.main.dto.request.*;
 import ru.practicum.main.dto.response.EventFullDto;
@@ -25,6 +26,7 @@ import ru.practicum.main.dto.response.EventRequestStatusUpdateResult;
 import ru.practicum.main.dto.response.EventShortDto;
 import ru.practicum.main.exception.model.ConflictException;
 import ru.practicum.main.exception.model.NotFoundException;
+import ru.practicum.main.exception.model.ValidationException;
 import ru.practicum.main.model.Category;
 import ru.practicum.main.model.Event;
 import ru.practicum.main.model.Location;
@@ -33,8 +35,8 @@ import ru.practicum.main.repository.CategoryRepository;
 import ru.practicum.main.repository.EventRepository;
 import ru.practicum.main.repository.EventSearchRepository;
 import ru.practicum.main.service.impl.EventServiceImpl;
-import ru.practicum.stat.client.StatClient;
-import ru.practicum.stat.dto.ViewStats;
+import ru.practicum.stat.client.StatsClientAnalyzer;
+import ru.practicum.stat.client.StatsClientCollector;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -65,7 +67,10 @@ class EventServiceImplTest {
     private CategoryRepository categoryRepository;
 
     @Mock
-    private StatClient statClient;
+    private StatsClientCollector statsClientCollector;
+
+    @Mock
+    private StatsClientAnalyzer statsClientAnalyzer;
 
     @Mock
     private EventCommentClient eventCommentClient;
@@ -117,7 +122,12 @@ class EventServiceImplTest {
                 .build();
     }
 
-    // ==================== ТЕСТЫ ДЛЯ addEvent ====================
+    private List<RecommendedEventProto> zeroRating(long eventId) {
+        return List.of(RecommendedEventProto.newBuilder()
+                .setEventId(eventId)
+                .setScore(0.0)
+                .build());
+    }
 
     @Test
     void addEvent_ShouldReturnEventFullDto_WhenValid() {
@@ -206,8 +216,6 @@ class EventServiceImplTest {
         verify(eventRepository, never()).save(any());
     }
 
-    // ==================== ТЕСТЫ ДЛЯ getUserEvents ====================
-
     @Test
     void getUserEvents_ShouldReturnEvents_WhenExists() {
         Page<Event> page = new PageImpl<>(List.of(event));
@@ -215,11 +223,10 @@ class EventServiceImplTest {
         when(eventRepository.findAllByInitiator(eq(1L), any(Pageable.class))).thenReturn(page);
         when(participationRequestClient.countByEventIdsAndStatus(anyList(), eq(ParticipationStatus.CONFIRMED)))
                 .thenReturn(List.<Object[]>of(new Object[]{1L, 0L}));
-        when(statClient.getStats(anyString(), anyString(), anyList(), eq(true)))
-                .thenReturn(List.of());
         when(eventCommentClient.countByEventIds(anyList()))
                 .thenReturn(List.<Object[]>of(new Object[]{1L, 0L}));
         when(userClient.findShortByIds(anyList())).thenReturn(List.of(userShortDto));
+        when(statsClientAnalyzer.getInteractionsCount(anyList())).thenReturn(List.of());
 
         List<EventShortDto> result = eventService.getUserEvents(1L, 0, 10);
 
@@ -238,15 +245,13 @@ class EventServiceImplTest {
         assertThat(result).isEmpty();
     }
 
-    // ==================== ТЕСТЫ ДЛЯ getUserEvent ====================
-
     @Test
     void getUserEvent_ShouldReturnEventFullDto_WhenExists() {
         when(eventRepository.findByEventIdAndInitiator(1L, 1L)).thenReturn(Optional.of(event));
         when(participationRequestClient.countByEventAndStatus(1L, ParticipationStatus.CONFIRMED)).thenReturn(0L);
-        when(statClient.getStats(anyString(), anyString(), anyList(), eq(true))).thenReturn(List.of());
         when(eventCommentClient.countByEventId(1L)).thenReturn(0L);
         when(userClient.findShortById(1L)).thenReturn(userShortDto);
+        when(statsClientAnalyzer.getInteractionsCount(List.of(1L))).thenReturn(zeroRating(1L));
 
         EventFullDto result = eventService.getUserEvent(1L, 1L);
 
@@ -272,8 +277,6 @@ class EventServiceImplTest {
                 .isInstanceOf(NotFoundException.class);
     }
 
-    // ==================== ТЕСТЫ ДЛЯ updateUserEvent ====================
-
     @Test
     void updateUserEvent_ShouldReturnUpdatedEvent_WhenValid() {
         UpdateEventUserRequest update = UpdateEventUserRequest.builder()
@@ -285,9 +288,9 @@ class EventServiceImplTest {
         when(eventRepository.findByEventIdAndInitiator(1L, 1L)).thenReturn(Optional.of(event));
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(participationRequestClient.countByEventAndStatus(1L, ParticipationStatus.CONFIRMED)).thenReturn(0L);
-        when(statClient.getStats(anyString(), anyString(), anyList(), eq(true))).thenReturn(List.of());
         when(eventCommentClient.countByEventId(1L)).thenReturn(0L);
         when(userClient.findShortById(1L)).thenReturn(userShortDto);
+        when(statsClientAnalyzer.getInteractionsCount(List.of(1L))).thenReturn(zeroRating(1L));
 
         EventFullDto result = eventService.updateUserEvent(1L, 1L, update);
 
@@ -307,9 +310,9 @@ class EventServiceImplTest {
         when(eventRepository.findByEventIdAndInitiator(1L, 1L)).thenReturn(Optional.of(event));
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(participationRequestClient.countByEventAndStatus(1L, ParticipationStatus.CONFIRMED)).thenReturn(0L);
-        when(statClient.getStats(anyString(), anyString(), anyList(), eq(true))).thenReturn(List.of());
         when(eventCommentClient.countByEventId(1L)).thenReturn(0L);
         when(userClient.findShortById(1L)).thenReturn(userShortDto);
+        when(statsClientAnalyzer.getInteractionsCount(List.of(1L))).thenReturn(zeroRating(1L));
 
         EventFullDto result = eventService.updateUserEvent(1L, 1L, update);
 
@@ -325,9 +328,9 @@ class EventServiceImplTest {
         when(eventRepository.findByEventIdAndInitiator(1L, 1L)).thenReturn(Optional.of(event));
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(participationRequestClient.countByEventAndStatus(1L, ParticipationStatus.CONFIRMED)).thenReturn(0L);
-        when(statClient.getStats(anyString(), anyString(), anyList(), eq(true))).thenReturn(List.of());
         when(eventCommentClient.countByEventId(1L)).thenReturn(0L);
         when(userClient.findShortById(1L)).thenReturn(userShortDto);
+        when(statsClientAnalyzer.getInteractionsCount(List.of(1L))).thenReturn(zeroRating(1L));
 
         EventFullDto result = eventService.updateUserEvent(1L, 1L, update);
 
@@ -372,8 +375,6 @@ class EventServiceImplTest {
                 .isInstanceOf(NotFoundException.class);
     }
 
-    // ==================== ТЕСТЫ ДЛЯ getEventRequests ====================
-
     @Test
     void getEventRequests_ShouldReturnRequests_WhenExists() {
         ParticipationRequestDto request = ParticipationRequestDto.builder()
@@ -401,8 +402,6 @@ class EventServiceImplTest {
         assertThatThrownBy(() -> eventService.getEventRequests(1L, 999L))
                 .isInstanceOf(NotFoundException.class);
     }
-
-    // ==================== ТЕСТЫ ДЛЯ changeRequestStatus ====================
 
     @Test
     void changeRequestStatus_ShouldRejectAll_WhenRejectAction() {
@@ -497,8 +496,6 @@ class EventServiceImplTest {
                 .hasMessageContaining("PENDING");
     }
 
-    // ==================== ТЕСТЫ ДЛЯ searchEventsAdmin ====================
-
     @Test
     void searchEventsAdmin_ShouldReturnEvents_WhenFiltersMatch() {
         AdminEventSearchParams params = AdminEventSearchParams.builder()
@@ -517,9 +514,9 @@ class EventServiceImplTest {
                 any(Pageable.class))).thenReturn(page);
         when(participationRequestClient.countByEventIdsAndStatus(anyList(), eq(ParticipationStatus.CONFIRMED)))
                 .thenReturn(List.<Object[]>of());
-        when(statClient.getStats(anyString(), anyString(), anyList(), eq(true))).thenReturn(List.of());
         when(eventCommentClient.countByEventIds(anyList())).thenReturn(List.<Object[]>of());
         when(userClient.findShortByIds(anyList())).thenReturn(List.of(userShortDto));
+        when(statsClientAnalyzer.getInteractionsCount(anyList())).thenReturn(List.of());
 
         List<EventFullDto> result = eventService.searchEventsAdmin(params);
 
@@ -547,8 +544,6 @@ class EventServiceImplTest {
         assertThat(result).isEmpty();
     }
 
-    // ==================== ТЕСТЫ ДЛЯ updateEventAdmin ====================
-
     @Test
     void updateEventAdmin_ShouldPublishEvent_WhenPending() {
         UpdateEventAdminRequest update = UpdateEventAdminRequest.builder()
@@ -558,9 +553,9 @@ class EventServiceImplTest {
         when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(participationRequestClient.countByEventAndStatus(1L, ParticipationStatus.CONFIRMED)).thenReturn(0L);
-        when(statClient.getStats(anyString(), anyString(), anyList(), eq(true))).thenReturn(List.of());
         when(eventCommentClient.countByEventId(1L)).thenReturn(0L);
         when(userClient.findShortById(1L)).thenReturn(userShortDto);
+        when(statsClientAnalyzer.getInteractionsCount(List.of(1L))).thenReturn(zeroRating(1L));
 
         EventFullDto result = eventService.updateEventAdmin(1L, update);
 
@@ -577,9 +572,9 @@ class EventServiceImplTest {
         when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(participationRequestClient.countByEventAndStatus(1L, ParticipationStatus.CONFIRMED)).thenReturn(0L);
-        when(statClient.getStats(anyString(), anyString(), anyList(), eq(true))).thenReturn(List.of());
         when(eventCommentClient.countByEventId(1L)).thenReturn(0L);
         when(userClient.findShortById(1L)).thenReturn(userShortDto);
+        when(statsClientAnalyzer.getInteractionsCount(List.of(1L))).thenReturn(zeroRating(1L));
 
         EventFullDto result = eventService.updateEventAdmin(1L, update);
 
@@ -640,9 +635,9 @@ class EventServiceImplTest {
         when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(participationRequestClient.countByEventAndStatus(1L, ParticipationStatus.CONFIRMED)).thenReturn(0L);
-        when(statClient.getStats(anyString(), anyString(), anyList(), eq(true))).thenReturn(List.of());
         when(eventCommentClient.countByEventId(1L)).thenReturn(0L);
         when(userClient.findShortById(1L)).thenReturn(userShortDto);
+        when(statsClientAnalyzer.getInteractionsCount(List.of(1L))).thenReturn(zeroRating(1L));
 
         EventFullDto result = eventService.updateEventAdmin(1L, update);
 
@@ -651,8 +646,6 @@ class EventServiceImplTest {
         assertThat(result.getParticipantLimit()).isEqualTo(100);
     }
 
-    // ==================== ТЕСТЫ ДЛЯ getPublishedEventById ====================
-
     @Test
     void getPublishedEventById_ShouldReturnEvent_WhenPublished() {
         event.setState(EventState.PUBLISHED);
@@ -660,22 +653,22 @@ class EventServiceImplTest {
 
         when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
         when(participationRequestClient.countByEventAndStatus(1L, ParticipationStatus.CONFIRMED)).thenReturn(0L);
-        when(statClient.getStats(anyString(), anyString(), anyList(), eq(true))).thenReturn(List.of());
         when(eventCommentClient.countByEventId(1L)).thenReturn(0L);
         when(userClient.findShortById(1L)).thenReturn(userShortDto);
+        when(statsClientAnalyzer.getInteractionsCount(List.of(1L))).thenReturn(zeroRating(1L));
 
-        EventFullDto result = eventService.getPublishedEventById(1L, "192.168.1.1");
+        EventFullDto result = eventService.getPublishedEventById(1L, 100L);
 
         assertThat(result).isNotNull();
         assertThat(result.getState()).isEqualTo(EventState.PUBLISHED);
-        verify(statClient).saveHit(anyString(), anyString());
+        verify(statsClientCollector).send(eq(100L), eq(1L), eq(ActionTypeProto.ACTION_VIEW));
     }
 
     @Test
     void getPublishedEventById_ShouldThrowNotFoundException_WhenNotPublished() {
         when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
 
-        assertThatThrownBy(() -> eventService.getPublishedEventById(1L, "192.168.1.1"))
+        assertThatThrownBy(() -> eventService.getPublishedEventById(1L, 100L))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Event with id=1 was not found");
     }
@@ -684,12 +677,10 @@ class EventServiceImplTest {
     void getPublishedEventById_ShouldThrowNotFoundException_WhenEventNotExists() {
         when(eventRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> eventService.getPublishedEventById(999L, "192.168.1.1"))
+        assertThatThrownBy(() -> eventService.getPublishedEventById(999L, 100L))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Event with id=999 was not found");
     }
-
-    // ==================== ТЕСТЫ ДЛЯ searchPublicEvents ====================
 
     @Test
     void searchPublicEvents_ShouldReturnEvents_WhenPublishedExist() {
@@ -708,59 +699,13 @@ class EventServiceImplTest {
                 any(Pageable.class))).thenReturn(page);
         when(participationRequestClient.countByEventIdsAndStatus(anyList(), eq(ParticipationStatus.CONFIRMED)))
                 .thenReturn(List.<Object[]>of());
-        when(statClient.getStats(anyString(), anyString(), anyList(), eq(true))).thenReturn(List.of());
         when(eventCommentClient.countByEventIds(anyList())).thenReturn(List.<Object[]>of());
         when(userClient.findShortByIds(anyList())).thenReturn(List.of(userShortDto));
+        when(statsClientAnalyzer.getInteractionsCount(anyList())).thenReturn(List.of());
 
-        List<EventShortDto> result = eventService.searchPublicEvents(params, "192.168.1.1");
+        List<EventShortDto> result = eventService.searchPublicEvents(params);
 
         assertThat(result).hasSize(1);
-        verify(statClient).saveHit(anyString(), anyString());
-    }
-
-    @Test
-    void searchPublicEvents_ShouldSortByViews_WhenSortParamIsVIEWS() {
-        Event event2 = Event.builder()
-                .id(2L)
-                .annotation("Another event annotation text here")
-                .description("Another event description text here")
-                .eventDate(baseTime.plusDays(5))
-                .createdOn(baseTime.minusDays(3))
-                .paid(true)
-                .participantLimit(0)
-                .requestModeration(true)
-                .title("Another Event")
-                .state(EventState.PUBLISHED)
-                .location(location)
-                .initiator(1L)
-                .category(category)
-                .build();
-
-        PublicEventSearchParams params = PublicEventSearchParams.builder()
-                .sort(EventSort.VIEWS)
-                .from(0)
-                .size(10)
-                .build();
-
-        Page<Event> page = new PageImpl<>(List.of(event, event2));
-
-        when(eventSearchRepository.searchPublic(any(PublicEventSearchFilter.class),
-                any(Pageable.class))).thenReturn(page);
-        when(participationRequestClient.countByEventIdsAndStatus(anyList(), eq(ParticipationStatus.CONFIRMED)))
-                .thenReturn(List.<Object[]>of());
-        when(statClient.getStats(anyString(), anyString(), anyList(), eq(true)))
-                .thenReturn(List.of(
-                        new ViewStats("ewm-main-service", "/events/1", 10L),
-                        new ViewStats("ewm-main-service", "/events/2", 50L)
-                ));
-        when(eventCommentClient.countByEventIds(anyList())).thenReturn(List.<Object[]>of());
-        when(userClient.findShortByIds(anyList())).thenReturn(List.of(userShortDto));
-
-        List<EventShortDto> result = eventService.searchPublicEvents(params, "192.168.1.1");
-
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).getViews()).isEqualTo(50L);
-        assertThat(result.get(1).getViews()).isEqualTo(10L);
     }
 
     @Test
@@ -780,12 +725,39 @@ class EventServiceImplTest {
                 any(Pageable.class))).thenReturn(page);
         when(participationRequestClient.countByEventIdsAndStatus(anyList(), eq(ParticipationStatus.CONFIRMED)))
                 .thenReturn(List.<Object[]>of());
-        when(statClient.getStats(anyString(), anyString(), anyList(), eq(true))).thenReturn(List.of());
         when(eventCommentClient.countByEventIds(anyList())).thenReturn(List.<Object[]>of());
         when(userClient.findShortByIds(anyList())).thenReturn(List.of(userShortDto));
+        when(statsClientAnalyzer.getInteractionsCount(anyList())).thenReturn(List.of());
 
-        List<EventShortDto> result = eventService.searchPublicEvents(params, "192.168.1.1");
+        List<EventShortDto> result = eventService.searchPublicEvents(params);
 
         assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void addLikeEvent_ShouldSendLike_WhenUserRegistered() {
+        when(eventRepository.existsByIdAndState(1L, EventState.PUBLISHED)).thenReturn(true);
+        when(participationRequestClient.isUserRegisteredForEvent(100L, 1L)).thenReturn(true);
+
+        eventService.addLikeEvent(1L, 100L);
+
+        verify(statsClientCollector).send(eq(100L), eq(1L), eq(ActionTypeProto.ACTION_LIKE));
+    }
+
+    @Test
+    void addLikeEvent_ShouldThrowNotFoundException_WhenEventNotPublished() {
+        when(eventRepository.existsByIdAndState(1L, EventState.PUBLISHED)).thenReturn(false);
+
+        assertThatThrownBy(() -> eventService.addLikeEvent(1L, 100L))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void addLikeEvent_ShouldThrowValidationException_WhenUserNotRegistered() {
+        when(eventRepository.existsByIdAndState(1L, EventState.PUBLISHED)).thenReturn(true);
+        when(participationRequestClient.isUserRegisteredForEvent(100L, 1L)).thenReturn(false);
+
+        assertThatThrownBy(() -> eventService.addLikeEvent(1L, 100L))
+                .isInstanceOf(ValidationException.class);
     }
 }

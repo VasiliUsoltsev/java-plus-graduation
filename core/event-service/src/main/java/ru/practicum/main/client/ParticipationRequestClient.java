@@ -37,5 +37,8 @@ public interface ParticipationRequestClient {
             @RequestParam Long eventId,
             @RequestParam int limit
     );
+
+    @GetMapping("/internal/checkregistered")
+    boolean isUserRegisteredForEvent(@RequestParam @Positive Long userId, @RequestParam @Positive Long eventId);
 }
 

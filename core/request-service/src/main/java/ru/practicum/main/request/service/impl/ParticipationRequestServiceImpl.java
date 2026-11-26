@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ewm.stats.grpc.ActionTypeProto;
 import ru.practicum.main.request.client.EventClient;
 import ru.practicum.main.request.client.UserClient;
 import ru.practicum.main.request.dto.client.EventDto;
@@ -19,6 +20,7 @@ import ru.practicum.main.request.model.enums.ParticipationStatus;
 import ru.practicum.main.request.repository.ParticipationRequestRepository;
 import ru.practicum.main.request.service.ParticipationRequestService;
 import ru.practicum.main.request.service.mapper.ParticipationRequestMapper;
+import ru.practicum.stat.client.StatsClientCollector;
 
 import java.util.Collection;
 import java.util.List;
@@ -32,6 +34,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     private final ParticipationRequestRepository requestRepository;
     private final EventClient eventClient;
     private final UserClient userClient;
+    private final StatsClientCollector statsClientCollector;
 
     @Override
     public List<ParticipationRequestDto> getUserRequests(Long userId) {
@@ -74,6 +77,9 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         ParticipationRequest saved = requestRepository.save(request);
         log.info("Created request {} for event {} by user {}", saved.getId(), eventId, userId);
+
+        statsClientCollector.send(userId, eventId, ActionTypeProto.ACTION_REGISTER);
+
         return ParticipationRequestMapper.toDto(saved);
     }
 
@@ -125,6 +131,11 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     @Transactional
     public int confirmRequestsAtomically(List<Long> ids, Long eventId, int limit) {
         return requestRepository.confirmRequestsAtomically(ids, eventId, limit);
+    }
+
+    @Override
+    public boolean isUserRegisteredForEvent(Long userId, Long eventId) {
+        return requestRepository.existsByEventAndRequesterAndStatus(eventId, userId, ParticipationStatus.CONFIRMED);
     }
 
     private Boolean existsById(Long userId) {

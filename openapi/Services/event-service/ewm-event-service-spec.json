@@ -26,7 +26,9 @@
   "paths": {
     "/internal/events/{eventId}": {
       "get": {
-        "tags": ["EventInternalController"],
+        "tags": [
+          "EventInternalController"
+        ],
         "summary": "Получение события по идентификатору",
         "description": "Возвращает полную информацию о событии. Используется Feign-клиентами EventClient (request-service, comment-service).",
         "operationId": "getEvent",
@@ -68,7 +70,9 @@
     },
     "/internal/events/{eventId}/existsevent": {
       "get": {
-        "tags": ["EventInternalController"],
+        "tags": [
+          "EventInternalController"
+        ],
         "summary": "Проверка существования события",
         "description": "Возвращает true, если событие с заданным идентификатором существует. Используется Feign-клиентами EventClient (comment-service).",
         "operationId": "existsEventById",
@@ -256,7 +260,11 @@
       "EventState": {
         "type": "string",
         "description": "Состояние события",
-        "enum": ["PENDING", "PUBLISHED", "CANCELED"],
+        "enum": [
+          "PENDING",
+          "PUBLISHED",
+          "CANCELED"
+        ],
         "example": "PUBLISHED"
       }
     }

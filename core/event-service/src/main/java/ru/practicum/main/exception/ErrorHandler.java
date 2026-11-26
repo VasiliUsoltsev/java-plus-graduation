@@ -176,4 +176,11 @@ public class ErrorHandler {
         return buildApiError("Comment-service is unavailable.",
                 e.getMessage(), HttpStatus.SERVICE_UNAVAILABLE, request);
     }
+
+    @ExceptionHandler(ValidationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleValidationException(ValidationException e, HttpServletRequest r) {
+        log.error("Некорректный запрос: {}", e.getMessage());
+        return buildApiError("Некорректный запрос", e.getMessage(), HttpStatus.BAD_REQUEST, r);
+    }
 }

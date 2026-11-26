@@ -26,7 +26,9 @@
   "paths": {
     "/internal/{eventId}": {
       "get": {
-        "tags": ["RequestInternalController"],
+        "tags": [
+          "RequestInternalController"
+        ],
         "summary": "Получение всех заявок на участие в событии",
         "description": "Возвращает список заявок для заданного события. Используется Feign-клиентом ParticipationRequestClient (event-service).",
         "operationId": "findAllByEventId",
@@ -65,7 +67,9 @@
     },
     "/internal": {
       "get": {
-        "tags": ["RequestInternalController"],
+        "tags": [
+          "RequestInternalController"
+        ],
         "summary": "Получение заявок по списку идентификаторов",
         "description": "Возвращает список заявок по переданным идентификаторам. Используется Feign-клиентом ParticipationRequestClient (event-service).",
         "operationId": "findAllByIdIn",
@@ -83,7 +87,11 @@
               },
               "minItems": 1
             },
-            "example": [1, 2, 3]
+            "example": [
+              1,
+              2,
+              3
+            ]
           }
         ],
         "responses": {
@@ -108,7 +116,9 @@
     },
     "/internal/counteventid": {
       "get": {
-        "tags": ["RequestInternalController"],
+        "tags": [
+          "RequestInternalController"
+        ],
         "summary": "Подсчёт заявок по событию и статусу",
         "description": "Возвращает количество заявок для заданного события с указанным статусом. Используется Feign-клиентом ParticipationRequestClient (event-service).",
         "operationId": "countByEventAndStatus",
@@ -155,7 +165,9 @@
     },
     "/internal/counteventids": {
       "get": {
-        "tags": ["RequestInternalController"],
+        "tags": [
+          "RequestInternalController"
+        ],
         "summary": "Подсчёт заявок по списку событий и статусу",
         "description": "Возвращает количество заявок для каждого из переданных событий с указанным статусом. Используется Feign-клиентом ParticipationRequestClient (event-service).",
         "operationId": "countByEventIdsAndStatus",
@@ -173,7 +185,11 @@
               },
               "minItems": 1
             },
-            "example": [1, 2, 3]
+            "example": [
+              1,
+              2,
+              3
+            ]
           },
           {
             "name": "status",
@@ -201,7 +217,16 @@
                     "minItems": 2,
                     "maxItems": 2
                   },
-                  "example": [[1, 5], [2, 3]]
+                  "example": [
+                    [
+                      1,
+                      5
+                    ],
+                    [
+                      2,
+                      3
+                    ]
+                  ]
                 }
               }
             }
@@ -214,7 +239,9 @@
     },
     "/internal/reject": {
       "get": {
-        "tags": ["RequestInternalController"],
+        "tags": [
+          "RequestInternalController"
+        ],
         "summary": "Отклонение оставшихся заявок в статусе PENDING",
         "description": "Отклоняет все заявки события в статусе PENDING, кроме переданных в excludeIds. Используется Feign-клиентом ParticipationRequestClient (event-service).",
         "operationId": "rejectRemainingPending",
@@ -242,7 +269,10 @@
                 "format": "int64"
               }
             },
-            "example": [1, 2]
+            "example": [
+              1,
+              2
+            ]
           }
         ],
         "responses": {
@@ -269,7 +299,9 @@
     },
     "/internal/confirmrequests": {
       "get": {
-        "tags": ["RequestInternalController"],
+        "tags": [
+          "RequestInternalController"
+        ],
         "summary": "Атомарное подтверждение заявок",
         "description": "Подтверждает заявки с учётом лимита участников. Используется Feign-клиентом ParticipationRequestClient (event-service).",
         "operationId": "confirmRequestsAtomically",
@@ -286,7 +318,10 @@
                 "format": "int64"
               }
             },
-            "example": [1, 2]
+            "example": [
+              1,
+              2
+            ]
           },
           {
             "name": "eventId",
@@ -370,7 +405,12 @@
       "ParticipationStatus": {
         "type": "string",
         "description": "Статус заявки на участие",
-        "enum": ["PENDING", "CONFIRMED", "REJECTED", "CANCELED"],
+        "enum": [
+          "PENDING",
+          "CONFIRMED",
+          "REJECTED",
+          "CANCELED"
+        ],
         "example": "PENDING"
       }
     }

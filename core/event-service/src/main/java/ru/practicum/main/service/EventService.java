@@ -27,13 +27,19 @@ public interface EventService {
 
     EventFullDto updateEventAdmin(Long eventId, UpdateEventAdminRequest update);
 
-    List<EventShortDto> searchPublicEvents(PublicEventSearchParams params, String ip);
+    List<EventShortDto> searchPublicEvents(PublicEventSearchParams params);
 
-    EventFullDto getPublishedEventById(Long eventId, String ip);
+    EventFullDto getPublishedEventById(Long eventId, Long userId);
 
     Boolean existsEventById(Long eventId);
 
     EventFullDto getEvent(Long eventId);
 
     List<Object[]> getEventTitleBatch(List<Long> eventIds);
+
+    List<EventShortDto> getRecommendations(Long userId, Integer maxResults);
+
+    List<EventShortDto> getSimilarEvents(Long eventId, Long userId, Integer maxResults);
+
+    void addLikeEvent(Long eventId, Long userId);
 }

@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.main.comment.client.EventClient;
 import ru.practicum.main.comment.client.UserClient;
-import ru.practicum.main.comment.dto.client.EventDto;
 import ru.practicum.main.comment.dto.client.UserDto;
 import ru.practicum.main.comment.dto.request.*;
 import ru.practicum.main.comment.dto.response.EventCommentAdminDto;
